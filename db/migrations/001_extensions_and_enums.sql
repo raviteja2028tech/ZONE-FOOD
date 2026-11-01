@@ -1,0 +1,15 @@
+-- 001: extensions and enumerated types.
+-- Source: Master Plan s4.3 (001_extensions_and_enums.sql).
+CREATE EXTENSION IF NOT EXISTS vector;    -- pgvector: embedding columns + HNSW indexes
+CREATE EXTENSION IF NOT EXISTS pg_trgm;   -- trigram index for typo-tolerant food-name search
+
+CREATE TYPE establishment_kind AS ENUM
+  ('COMMERCIAL','EDUCATIONAL','ORGANIZATIONAL','RESIDENTIAL','RECREATIONAL','RETAIL_FOOD','HEALTHCARE');
+CREATE TYPE user_role AS ENUM
+  ('ZONE_ADMIN','ESTAB_MANAGER','ESTAB_STAFF','RECIPIENT_AGENT','AUDITOR');
+CREATE TYPE meal_slot AS ENUM ('BREAKFAST','LUNCH','SNACKS','DINNER','ALL_DAY');
+-- The PDF text is clipped after POST_CONSUMER_SERVIC; POST_CONSUMER_SERVICE is the documented completion.
+CREATE TYPE waste_stage AS ENUM
+  ('PRE_CONSUMER_PREP','PRE_CONSUMER_SPOILAGE','PRE_CONSUMER_EXPIRY','POST_CONSUMER_PLATE','POST_CONSUMER_SERVICE');
+CREATE TYPE listing_status AS ENUM ('OPEN','PARTIALLY_CLAIMED','FULLY_CLAIMED','EXPIRED','CANCELLED');
+CREATE TYPE claim_status   AS ENUM ('REQUESTED','APPROVED','COLLECTED','NO_SHOW','REJECTED');
