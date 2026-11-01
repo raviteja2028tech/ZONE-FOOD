@@ -1,89 +1,92 @@
 # CURRENT STATUS - ZoneFood
 
-_Single source of truth. Last updated 2026-11-01 after completing Part 3 (Phases 3.1-3.5)._
+_Single source of truth. Last updated 2026-11-01 after the final audit / UI / Git round ("Part 5")._
 
-**Parts 1 and 2:** complete, approved. **Part 3 (3.1 query catalogue · 3.2 advanced DBMS · 3.3 UI polish · 3.4 testing · 3.5 documentation): COMPLETE and verified. STOPPED - awaiting your approval.**
-Part 4: optional, **not started**.
+## Overall readiness
 
-## What Part 3 delivers
+**Parts 1-3: complete and verified. Final round: complete except two items that need information or a decision from you (below).**
+Because Req. 2 (team details) and Req. 15 (individual Git history / GitHub) are not fully satisfiable by me, the project is **not declared 100 % complete**: 16 of 18 requirements are COMPLETE, 2 are PARTIAL. Part 4 (optional) was **not started**.
 
-| Phase | Delivered |
+## Part / phase status
+
+| Part | State |
 |---|---|
-| 3.1 | **26 catalogue queries** in `db/queries/` (22 analytic + 4 DML), each with title, concepts, purpose, SQL and a reading guide; generated [QUERY_CATALOGUE.md](docs/QUERY_CATALOGUE.md) with real results; all executed and semantically verified |
-| 3.2 | Migrations **014-018**: ALTER + DROP DDL (014), 3 views + 1 materialised view (015), 5 functions + 1 stored procedure (016), triggers T3-T6 (017), `idx_waste_lot` (018). **Stock is deducted exactly once, by trigger T3**; EXPLAIN evidence, partition pruning, concurrency evidence, FTS, pgvector documentation, safe DDL/transaction/race demos |
-| 3.3 | Analytics page, DBMS Lab (catalogue runner with EXPLAIN ANALYZE, 12 live constraint demos, database-object browser, MV refresh), Audit log, command palette (Ctrl+K), count-up KPIs and sparklines, anomaly-marked charts with a table view, redesigned lists/dashboards; light/dark; no overflow at 390 / 820 / 1440 px |
-| 3.4 | `scripts/run_all_tests.py` runs everything and writes [docs/TEST_REPORT.md](docs/TEST_REPORT.md) from machine-readable results |
-| 3.5 | README, ER diagram, data dictionary, PostgreSQL + MongoDB design, architecture, query catalogue, advanced-DBMS document, object reference, EXPLAIN + concurrency evidence, test report, traceability matrix (Req. 1-18), demo script, viva Q&A, project report, screenshots |
+| 1 Database foundation | complete, approved |
+| 2 Application, auth, ETL, semantic matching | complete, approved |
+| 3 Catalogue, advanced DBMS, UI polish, tests, docs | complete, approved |
+| Final round: audit, premium UI, Git, fresh-clone verification, docs | complete (see open items) |
+| 4 Forecasting / research | optional, not started |
 
-## Actual test results (run 2026-11-01 by `python scripts/run_all_tests.py`)
+## Requirement audit result (details: [docs/REQUIREMENTS_AUDIT.md](docs/REQUIREMENTS_AUDIT.md))
+
+COMPLETE: Req. 1, 3-14, 16-18. **PARTIAL: Req. 2** (responsibility table prepared in [docs/TEAM_AND_CONTRIBUTIONS.md](docs/TEAM_AND_CONTRIBUTIONS.md), names/IDs/roles not supplied), **Req. 15** (Git initialised and committed locally; no GitHub remote; no genuine multi-author history). The 22 plan queries all return meaningful results on the working database (re-run today). The ~55k vs 400k row count was assessed and deliberately kept (audit §3). Documented deviations D1-D6 remain in REQUIREMENTS_TRACEABILITY.md.
+
+## Completed this round
+
+* Full audit of source, database, tests, docs and Git against the plan; findings A1-A5 in the audit.
+* **Git** initialised **inside the project folder only** (`main`, 9 commits by component). Home repository untouched. `.gitignore` reviewed (secrets, `.venv`, `node_modules`, `.next`, `.cache`, reports, volumes ignored); `.gitattributes` forces LF so migration checksums are portable. Secret scan: none of the `.env` values occurs in any tracked file. **Nothing pushed.**
+* **UI premium layer** (below), documentation upgrades, new audit and team documents, academic project report, demo script update.
+* Tests re-run on the final tree, fresh-clone verification from `git clone`.
+
+## UI improvements (all real data; reduced-motion respected)
+
+| Area | Change |
+|---|---|
+| Libraries | added `motion` 14.9.0 (React 19 compatible, checked with `npm view`) and `gsap` 3.15.0 (sign-in only, loaded on demand) |
+| Sign-in | cinematic hero: GSAP word-by-word headline, drawn food-lifecycle path with nodes and a travelling pulse (illustration only, labelled), pointer-parallax orbs, demo-account picker |
+| Global | ambient colour-field background with film grain; translucent top bar and sidebar; page transitions; button press/lift micro-interactions |
+| Navigation | shared-layout sliding active pill (`layoutId`) |
+| Dashboard | staggered glass KPI cards with pointer spotlight; animated counters; **Zone pulse** (ring per block = diversion rate, ring size = food handled); **Redistribution pipeline** (offered / reserved / collected from `v_redistribution_performance`, animated fill and counters); Recipient feed cards stagger in |
+| Loading | Analytics skeleton mirrors the page layout; shimmer skeletons elsewhere |
+| Verified | 33 pages across admin / manager / recipient: HTTP 200, zero console errors, zero horizontal overflow; Claim modal opens; dashboard checked at 1440 and 390 px, light and dark |
+
+Files changed: `src/components/motion/motion.tsx` (new), `src/components/dashboard/visuals.tsx` (new), `src/components/auth/hero-scene.tsx` (new), `src/app/(shell)/analytics/loading.tsx` (new), and edits to `globals.css`, `layout.tsx`, `template.tsx`, `nav-links.tsx`, `kpi-card.tsx`, `button.tsx`, `app-shell.tsx`, `auth-layout.tsx`, `(shell)/page.tsx`, `(shell)/feed/page.tsx`, `lib/dashboard.ts`, `package.json`.
+
+## Tests actually executed (2026-11-01, final tree)
 
 | Suite | Result |
 |---|---|
-| pytest - database layer (Part 1 37 · Part 3 31 · catalogue 48 · demos 4) | **120 / 120** |
-| TypeScript type-check · ESLint | clean · clean |
-| vitest unit | **46 / 46** |
-| vitest integration (disposable `zonefood_webtest` DB + Mongo; Part 2 59 + Part 3 20) | **79 / 79** |
-| Production build | PASS (68 routes) |
-| **Total automated tests** | **245 / 245** |
-| `python scripts/verify_db.py` on the working database | 55 / 55 |
-| `python scripts/gen_docs.py --check` | ER diagram + data dictionary match the live schema |
-| **Fresh-copy check** (only files git would track, new venv, new databases `zf_fresh`, `.env` from the existing credentials) | `setup_db.py` built schema + seed, verify 55/55; `npm ci`, type-check, lint, unit 46/46, build, pytest 120/120; server started, admin login 200, dashboard/analytics 200, Lab query API returned rows. The temporary databases and folder were removed afterwards |
-| Browser QA (headless Chromium) | dashboards, Analytics, Lab (query, EXPLAIN, demos, objects), Audit, lists; light/dark; phone/tablet widths; zero console errors |
+| `python scripts/run_all_tests.py` | **245 / 245 passed** - pytest 120, vitest unit 46, vitest integration 79 (disposable `zonefood_webtest` DB) |
+| Type-check, ESLint | clean, clean |
+| Production build | pass (68 routes) |
+| `verify_db.py` on the working database | 55 / 55 |
+| **Fresh clone** (`git clone` of the local repository into a temp folder, new venv, new databases `zf_clone` in the existing containers) | `setup_db.py` 55/55; `npm ci`; type-check; lint; unit 46/46; **build**; `demo:prepare` (81/81 foods and 8/8 recipients embedded); pytest 120/120; **integration 79/79**; server started; browser smoke of 33 pages for 3 roles (200, 0 errors, 0 overflow); Claim modal |
+| Cleanup | clone folder, its databases and server removed; working database re-verified 55/55 and untouched |
 
-Concurrency (real simultaneous connections): 10 write-offs of 3 kg on a 10 kg lot → **3 succeed, 1 kg left**; 8 approvals of 4 kg on a 10 kg listing → **2 approved**; 6 identical claims → **1 claim**; 5 concurrent closes of one session → **1 close**. Details and the timestamped lock-wait trace: [docs/CONCURRENCY_EVIDENCE.md](docs/CONCURRENCY_EVIDENCE.md).
+Caveat: the fresh clone reused the already running Docker containers (new database names, same credentials), not brand-new volumes.
 
-## Database changes in Part 3 (migrations 014-018; Part 1-2 data preserved)
-
-| Migration | Change |
-|---|---|
-| 014 | `ALTER TABLE waste_event ADD measurement_source` + CHECK, back-fill; T2 redefined to derive provenance; `DROP INDEX idx_wastenote_vec` |
-| 015 | `v_daily_waste`, `v_preparation_efficiency`, `v_redistribution_performance`, `mv_zone_monthly` (+ unique index) |
-| 016 | `fn_waste_intensity`, `fn_search_food`, `fn_claim_surplus`, `fn_transition_claim`, `sp_close_service_session`, `fn_ensure_waste_partitions` |
-| 017 | T3 `tr_lot_ledger` (BEFORE), T4 `tr_audit`, T5 `tr_claim_guard`, T6 `tr_listing_guard` |
-| 018 | `idx_waste_lot` (Q20: 30 s timeout → under 1 s) |
-
-Part 1 files touched minimally: `seed.py` (bulk-load switch, MV refresh), `verify_db.py` (new tables; embedding/sync checks generalised), `tests/test_part1.py` (one claim test now uses an APPROVED claim because T5 forbids skipping states).
-
-## Application changes in Part 3
-
-Repositories now call the database routines (`claims.ts`, `kitchen.ts`, `waste.ts`, `catalog.ts`); new `insights.ts`, `audit.ts`, `db-objects.ts`; `lib/lab.ts` (catalogue loader, demos); API routes `/api/lab/{run,demo,refresh}`; `withTransaction({userId})` sets the audit user; `int8` parsed as numbers; error mapping for the new SQLSTATEs. New permissions `analytics:view`, `lab:use`, `audit:read`.
-
-## Errors met and resolved (Part 3)
+## Failures and resolutions this round
 
 | Problem | Resolution |
 |---|---|
-| 10-way concurrent write-off **deadlocked** (AFTER trigger + FK `KEY SHARE` lock upgrade) | T3 became a BEFORE trigger (migration 017, before it was ever committed); explained in CONCURRENCY_EVIDENCE.md and DECISIONS 38 |
-| Q20 exceeded the 30 s timeout (seq scan per lot) | `idx_waste_lot` (migration 018), measured in EXPLAIN_EVIDENCE.md |
-| Part 1 test conflicted with the claim state machine T5 | test updated to use an APPROVED claim (documented) |
-| Seed would re-deduct stock / flood the audit log | transaction-local `zonefood.bulk_load` switch, tested both ways |
-| Q24 empty on a freshly seeded DB | test ages OPEN listings (time passes) instead of weakening the query |
-| Phone overflow from grid `min-width: auto` | `min-w-0` on Card, `minWidth` prop on tables |
-| Chart bars "missing" in full-page screenshots | Recharts animation restarts on capture; verified 62 bars exist; screenshots are viewport captures |
-| `run_all_tests.py` crashed printing box-drawing characters on Windows cp1252 | stdout reconfigured to UTF-8 |
-| `docs/ARCHITECTURE.md` was accidentally emptied by a failed scripted edit | rebuilt in full from content already read, plus the Part 3 sections |
+| Hero headline words lost their spaces in the accessibility text | explicit space nodes after each animated word |
+| Windows CRLF warnings could alter migration bytes | `.gitattributes` (`eol=lf`) |
+| EXPLAIN speed-up figures change on every regeneration, so hand-written quotes went stale | docs now quote ranges and point to the generated file |
+| (earlier) `ARCHITECTURE.md` truncated by a failed scripted edit | rebuilt from content already read |
 
-## Remaining issues and honest notes
+## Git status
 
-1. **Git:** the repository root is your home directory (`C:/Users/ravit`, branch `mai`, one unrelated commit); this project is untracked inside it. Nothing was initialised, committed or pushed. Req. 15 (per-member commit history) needs your decision.
-2. **Req. 2** (team members and responsibilities) cannot be supplied from the repository; `docs/PROJECT_REPORT.md` §2 holds a placeholder.
-3. **Deviations from the plan** (reasons in [REQUIREMENTS_TRACEABILITY.md](docs/REQUIREMENTS_TRACEABILITY.md)): Q21 is data provenance, not forecast accuracy (forecasting = Part 4); ALTER/DROP targets differ from the plan's example; `tr_lot_ledger` instead of `tr_lot_deduct`; ~55k waste rows instead of 400k (index gains on small tables are plan-shape evidence; the evidence says where an index does not help).
-4. Embedding model is small and English-only (88 % name resolution measured, one false positive).
-5. The working database holds the synthetic seed plus QA walkthrough leftovers; `python scripts/setup_db.py --reset` restores a clean seed. Timings in the generated evidence documents vary slightly per regeneration.
-6. The original course-requirements PDF is not in the repository; Req. numbers follow the plan's §14.
-7. `npm audit` still reports a moderate dev-tooling advisory (ESLint's `minimatch`), not shipped to runtime.
+`D:\...\DBMS-MINI-PROJECT\.git`, branch `main`, 9 commits including this one (config, db, tooling, app, web tests, docs, UI layer, audit docs, final status). Working tree clean after the final commit. Author identity: the Git identity already configured on this machine; assistant commits carry a `Co-Authored-By` trailer. No remote. Nothing pushed.
+
+## Remaining information required from you
+
+1. **Team member names, university IDs and the actual split of work** → `docs/TEAM_AND_CONTRIBUTIONS.md` (all `⟦ ⟧` markers) and the title block of `docs/PROJECT_REPORT.md`.
+2. **GitHub decision**: create the repository and approve the push (`git remote add origin <url>; git push -u origin main`), and have each member commit under their own account so individual contributions are real.
+3. Optional: confirm the course name/semester wording in the report header.
+
+## Documentation status
+
+All documents describe implemented features; generated evidence (`ER_DIAGRAM`, `DATA_DICTIONARY`, `QUERY_CATALOGUE`, `EXPLAIN_EVIDENCE`, `CONCURRENCY_EVIDENCE`, `DB_OBJECTS`, `MONGODB_DESIGN`, `TEST_REPORT`) was regenerated from live runs. The EXPLAIN and concurrency files carry run-specific timings.
 
 ## Run commands
 
 ```powershell
 docker compose up -d --wait
-python scripts/setup_db.py            # add --reset for a clean rebuild (needs the venv: .\.venv\Scripts\python)
+python scripts/setup_db.py            # add --reset for a clean rebuild (use .\.venv\Scripts\python)
 npm install
 npm run demo:prepare                  # embeddings + live demo listings
-npm run dev                           # http://localhost:3000     (or: npm run build ; npm start)
+npm run dev                           # http://localhost:3000   (or: npm run build ; npm start)
 python scripts/run_all_tests.py       # everything + docs/TEST_REPORT.md
-python scripts/gen_part3_docs.py      # regenerate generated evidence documents
 ```
 
-## Next step
-
-Awaiting your approval of Part 3. Part 4 (forecasting, similar-incident search) is optional and will not be started without it.
+Demo accounts and the 12-14 minute sequence: [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md). Password = `DEMO_USER_PASSWORD` in your `.env`.
