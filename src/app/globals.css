@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+/*
+ * ZoneFood design system - tokens first.
+ * Components never use raw colours; they use the semantic utilities generated from @theme below
+ * (bg-canvas, bg-surface, text-ink, text-ink-muted, border-line, bg-accent, ...).
+ * Light and dark themes both meet WCAG AA for text; status is always paired with an icon + label.
+ * Type scale: 12 / 14 / 16 / 20 / 28 / 36. Spacing: Tailwind's 4px scale. Radii: 8 / 12 / 16.
+ */
+
+:root {
+  color-scheme: light;
+  --canvas: oklch(0.982 0.004 170);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.966 0.006 170);
+  --line: oklch(0.915 0.008 170);
+  --line-strong: oklch(0.85 0.012 170);
+  --ink: oklch(0.2 0.02 200);
+  --ink-muted: oklch(0.46 0.02 200);
+  --accent: oklch(0.5 0.115 170);
+  --accent-hover: oklch(0.44 0.11 170);
+  --accent-ink: oklch(0.42 0.1 170);
+  --accent-on: oklch(1 0 0);
+  --accent-soft: oklch(0.955 0.04 170);
+  --ok: oklch(0.45 0.12 150);
+  --ok-soft: oklch(0.955 0.045 150);
+  --warn: oklch(0.45 0.1 70);
+  --warn-soft: oklch(0.96 0.06 85);
+  --bad: oklch(0.5 0.17 25);
+  --bad-soft: oklch(0.96 0.03 25);
+  --info: oklch(0.46 0.12 250);
+  --info-soft: oklch(0.955 0.03 250);
+  --elev-card: 0 1px 2px oklch(0.2 0.02 200 / 0.05), 0 4px 16px -6px oklch(0.2 0.02 200 / 0.08);
+  --elev-pop: 0 12px 40px -12px oklch(0.2 0.05 200 / 0.25);
+  --hero-from: oklch(0.34 0.07 175);
+  --hero-to: oklch(0.24 0.05 215);
+  /* Chart categorical slots 1-5, fixed order (validated palette; see docs/UI_DESIGN_DIRECTION.md) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #e87ba4;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: oklch(0.165 0.012 205);
+  --surface: oklch(0.21 0.014 205);
+  --surface-2: oklch(0.25 0.015 205);
+  --line: oklch(0.31 0.015 205);
+  --line-strong: oklch(0.4 0.02 205);
+  --ink: oklch(0.96 0.005 170);
+  --ink-muted: oklch(0.75 0.015 190);
+  --accent: oklch(0.74 0.14 170);
+  --accent-hover: oklch(0.8 0.14 170);
+  --accent-ink: oklch(0.8 0.13 170);
+  --accent-on: oklch(0.18 0.03 190);
+  --accent-soft: oklch(0.3 0.06 175);
+  --ok: oklch(0.8 0.15 150);
+  --ok-soft: oklch(0.3 0.06 150);
+  --warn: oklch(0.82 0.13 85);
+  --warn-soft: oklch(0.32 0.06 80);
+  --bad: oklch(0.76 0.15 25);
+  --bad-soft: oklch(0.31 0.07 25);
+  --info: oklch(0.78 0.11 250);
+  --info-soft: oklch(0.3 0.06 250);
+  --elev-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 6px 20px -8px oklch(0 0 0 / 0.5);
+  --elev-pop: 0 16px 48px -12px oklch(0 0 0 / 0.7);
+  --hero-from: oklch(0.3 0.07 175);
+  --hero-to: oklch(0.2 0.05 215);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #d55181;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-on: var(--accent-on);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --color-series-4: var(--series-4);
+  --color-series-5: var(--series-5);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-card: var(--elev-card);
+  --shadow-pop: var(--elev-pop);
+
+  --animate-rise: rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, currentColor 45%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in oklch, currentColor 0%, transparent); }
+}
+@keyframes shimmer {
+  to { background-position-x: -200%; }
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /* Figures align in columns everywhere. */
+  .tabular { font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  ::selection { background: color-mix(in oklch, var(--accent) 30%, transparent); }
+  button, a { -webkit-tap-highlight-color: transparent; }
+}
+
+@layer utilities {
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 0.07) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse at 70% 0%, black 20%, transparent 75%);
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 37%, var(--surface-2) 63%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+dialog.zf-modal[open] { animation: modal-in 180ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+dialog.zf-modal::backdrop { background: oklch(0.15 0.02 200 / 0.55); backdrop-filter: blur(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
