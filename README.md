@@ -68,7 +68,7 @@ install; change them in `.env`. Hosts are `127.0.0.1` rather than `localhost` 鈥
 
 ## Web application (Part 2)
 
-Next.js 16 (App Router, Turbopack) + React 19 + TypeScript + Tailwind CSS 4 + Recharts. Node >= 20.9 (tested on Node 24).
+Next.js 16 (App Router, Turbopack) + React 19 + TypeScript + Tailwind CSS 4 + Recharts, with `motion` for page/card/navigation animation and `gsap` for the sign-in sequence only (all animation respects reduced-motion). Node >= 20.9 (tested on Node 24).
 PostgreSQL via raw parameterised SQL (`pg`); MongoDB via the official driver; no ORM. Local embeddings (MiniLM-L6-v2 through ONNX Runtime) - no API key.
 
 ```powershell
@@ -158,12 +158,18 @@ Results: [docs/TEST_REPORT.md](docs/TEST_REPORT.md). The working database is nev
 | [docs/ADVANCED_DBMS.md](docs/ADVANCED_DBMS.md) 路 [docs/DB_OBJECTS.md](docs/DB_OBJECTS.md) | procedures, triggers, views, indexes, partitioning, search, vectors, DDL |
 | [docs/EXPLAIN_EVIDENCE.md](docs/EXPLAIN_EVIDENCE.md) 路 [docs/CONCURRENCY_EVIDENCE.md](docs/CONCURRENCY_EVIDENCE.md) | measured plans; race-condition evidence |
 | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | unit and system/integration test results |
+| [docs/REQUIREMENTS_AUDIT.md](docs/REQUIREMENTS_AUDIT.md) | independent Req. 1-18 audit, data-volume assessment, open items |
 | [docs/REQUIREMENTS_TRACEABILITY.md](docs/REQUIREMENTS_TRACEABILITY.md) | Req. 1-18, query map, deviations |
+| [docs/TEAM_AND_CONTRIBUTIONS.md](docs/TEAM_AND_CONTRIBUTIONS.md) | team members and responsibilities (to be completed by the team) |
 | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) 路 [docs/VIVA_QA.md](docs/VIVA_QA.md) | 12-minute demo; viva questions with answers |
 | [docs/DECISIONS.md](docs/DECISIONS.md) 路 [docs/UI_DESIGN_DIRECTION.md](docs/UI_DESIGN_DIRECTION.md) | design decisions; UI direction |
 | [docs/screenshots/](docs/screenshots/) | screenshots of the running application |
 
 Regenerate the generated documents from the live databases: `python scripts/gen_docs.py` (ER, dictionary) and `python scripts/gen_part3_docs.py` (catalogue, EXPLAIN, concurrency, objects, MongoDB).
+
+## Version control
+
+Git is initialised **inside this project folder** (not in any parent directory). Nothing has been pushed. To publish when you decide to: `git remote add origin <url>` then `git push -u origin main`. `.env`, `node_modules`, `.venv`, database volumes and the model cache are git-ignored; `.gitattributes` keeps SQL files LF so migration checksums match on every machine.
 
 ## Repository layout
 
@@ -190,5 +196,6 @@ ZoneFood_Master_Plan.pdf  project specification        ZoneFood_WORKFLOW.md  bui
 |---|---|---|
 | 1 | Database foundation: environment, schema, migrations, seed data | Done & verified (approved) |
 | 2 | Next.js application, auth/roles, lifecycle workflows, MongoDB integration + ETL, embeddings | Done & verified (approved) |
-| 3 | Query catalogue, advanced DBMS features, dashboard UI, testing, submission package | **Done & verified; awaiting your approval** |
+| 3 | Query catalogue, advanced DBMS features, dashboard UI, testing, submission package | Done & verified (approved) |
+| 5 | Final audit, premium UI layer, Git set-up, fresh-clone verification | **Done; open items (team details, GitHub remote) listed in CURRENT_STATUS.md** |
 | 4 | Forecasting / research extensions | Optional - never started without explicit approval |

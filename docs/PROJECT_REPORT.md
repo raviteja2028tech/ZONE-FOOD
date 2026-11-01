@@ -1,73 +1,114 @@
-# ZoneFood - project report
+# ZoneFood: A Locality-Scale Food Resource and Waste Intelligence System
 
-_Locality-scale food resource and waste intelligence system. All data is synthetic._
+**Database Management Systems - Mini-Project Report**
 
-## 1. Problem
+| | |
+|---|---|
+| Project title | ZoneFood - Locality-Scale Food Resource and Waste Intelligence System |
+| Team members | see [TEAM_AND_CONTRIBUTIONS.md](TEAM_AND_CONTRIBUTIONS.md) *(names and IDs to be supplied by the team)* |
+| Course / institution | DBMS Level 3, PES University *(as stated in the project plan)* |
+| Technologies | PostgreSQL 16 + pgvector 0.8, MongoDB 7, Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| Data | entirely synthetic; no real establishment, person or organisation is described |
 
-Food is wasted at every stage - purchasing, storage, preparation, service, plate - by very different kinds of places (restaurants, college messes, hostels, hospitals, offices, supermarkets, clubs, households). Each place sees only its own bin. The interesting questions are zone-level: *where is food wasted, at which stage, why, and could the surplus reach someone who needs it before it spoils?* ZoneFood makes those questions database queries and closes the loop: record → normalise → analyse → match → redistribute → evaluate.
+---
 
-It is deliberately not a CRUD application: the value is in cross-establishment analytics, stored business rules, concurrency-safe redistribution and semantic matching.
+## Abstract
 
-## 2. Team and responsibilities
+Food is lost at every step between purchase and plate, and each kitchen sees only its own bin. ZoneFood treats waste as a *locality-level system problem*. It records procurement, inventory, preparation, service and waste for heterogeneous establishments (restaurants, college messes, hospitals, supermarkets, households), rolls the figures up a street → block → sector hierarchy, and matches edible surplus with recipient organisations that can use it. The system combines three data technologies, each chosen for what it does best: PostgreSQL for the transactional record and the business rules enforced by constraints, triggers, functions and a stored procedure; MongoDB for field submissions whose shape differs by establishment type; and pgvector for semantic matching. The submission includes a 26-query SQL catalogue, measured EXPLAIN evidence, real concurrency tests, a role-based web application with analytics and a DBMS demonstration laboratory, and a suite of 245 automated tests that pass on a disposable database.
 
-_To be completed by the team (Req. 2): member names, university IDs and the split of work. The repository cannot supply this and nothing has been invented._
+## 1. Introduction and problem statement
 
-## 3. Why three database technologies
+A zone-level view needs answers that no single kitchen can provide: *where* is food wasted, at which *stage*, with which *cause*, and could the surplus reach someone who needs it before it spoils? These are queries across many establishments over time; they also require writes that must never leave the data inconsistent (stock that goes negative, a listing promised twice). The project is therefore not a CRUD application: its value lies in cross-establishment analytics, rules enforced inside the database, concurrency control and semantic matching.
 
-| Technology | Role | Justification (Req. 3, 18) |
+**Objectives**
+
+1. Model the food lifecycle relationally with integrity enforced declaratively wherever possible.
+2. Hold variably shaped field data in a document store and synchronise it safely and idempotently.
+3. Demonstrate advanced DBMS concepts on a real schema, with evidence rather than assertion.
+4. Provide a secure role-based application on top, with analytics that read from the same SQL as the documentation.
+
+## 2. Choice of database technologies
+
+| Technology | Role | Why it is the right tool |
 |---|---|---|
-| PostgreSQL 16 | system of record | quantities must balance; constraints, triggers, ACID, row locks, partitioning, window functions, recursive CTEs |
-| MongoDB 7 | raw, variably shaped submissions; inspections; sensor series; activity stream | shape depends on establishment kind; documents must be kept raw and re-processable |
-| pgvector (in PostgreSQL) | semantic matching, name resolution | similarity combined with relational filters in one statement |
+| PostgreSQL 16 | system of record | quantities must balance; CHECK / FK / UNIQUE, triggers, ACID transactions, row locks, partitioning, window functions and recursive CTEs |
+| MongoDB 7 | raw submissions, inspections, bin-sensor time series, activity stream | each establishment kind logs different fields; relationally this is ~40 mostly-NULL columns or an EAV table; raw documents must stay untouched for audit and reprocessing |
+| pgvector (inside PostgreSQL) | semantic matching and name resolution | vectors live beside the facts they describe, so similarity can be combined with relational filters in one statement |
 
-## 4. Design
+Detailed reasoning: [DATA_MODEL.md](DATA_MODEL.md) §1, [MONGODB_DESIGN.md](MONGODB_DESIGN.md), [DECISIONS.md](DECISIONS.md).
 
-* **Relational schema:** 31 tables in 18 migrations; ER diagram and data dictionary are generated from the live catalog ([ER_DIAGRAM.md](ER_DIAGRAM.md), [DATA_DICTIONARY.md](DATA_DICTIONARY.md)); normalisation note in [DATA_MODEL.md](DATA_MODEL.md).
-* **MongoDB:** five collections with `$jsonSchema` validators, indexes, a time-series and a capped collection, and a `$facet` aggregation ([MONGODB_DESIGN.md](MONGODB_DESIGN.md)).
-* **Architecture and data flows:** [ARCHITECTURE.md](ARCHITECTURE.md).
-* **Decisions and their reasons:** [DECISIONS.md](DECISIONS.md) (48 entries).
+## 3. System design
 
-## 5. Implementation highlights
+* **Relational design:** 31 tables, created by 18 checksummed migrations; self-referencing zone hierarchy, disjoint establishment subtypes, many-to-many tables, and a monthly range-partitioned fact table. The ER diagram and data dictionary are *generated* from the live catalogue ([ER_DIAGRAM.md](ER_DIAGRAM.md), [DATA_DICTIONARY.md](DATA_DICTIONARY.md)); the normalisation argument (1NF-3NF and one deliberate denormalisation) is in [DATA_MODEL.md](DATA_MODEL.md) §2.
+* **Document design:** five collections with `$jsonSchema` validators, compound/multikey/text indexes, a time-series and a capped collection ([MONGODB_DESIGN.md](MONGODB_DESIGN.md)).
+* **Architecture and data flows** (lifecycle, ETL, session close, stock write-off): [ARCHITECTURE.md](ARCHITECTURE.md).
+* **Three-layer validation:** schema validation in the API (zod) → declarative constraints → triggers for cross-table rules.
 
-| Area | What was built | Evidence |
+## 4. Implementation of advanced DBMS concepts
+
+| Concept | Implementation | Evidence |
 |---|---|---|
-| Schema and DDL | CREATE (001-013), ALTER + DROP (014), views (015), indexes (008, 018) | `db/migrations`, `db/demos/01_*` |
-| Stored logic | 7 functions and procedures (incl. `zone_root`), 6 triggers, a bulk-load switch | [ADVANCED_DBMS.md](ADVANCED_DBMS.md), [DB_OBJECTS.md](DB_OBJECTS.md) |
-| Query catalogue | 26 queries (22 analytic + DML), each with concept, purpose, SQL and explanation | [QUERY_CATALOGUE.md](QUERY_CATALOGUE.md) |
-| Performance | measured EXPLAIN ANALYZE evidence, partition pruning, a partial index found by a failing query | [EXPLAIN_EVIDENCE.md](EXPLAIN_EVIDENCE.md) |
-| Concurrency | row locks; 10-way write-off race, 8-way approval race, duplicate-claim race, deadlock found and fixed | [CONCURRENCY_EVIDENCE.md](CONCURRENCY_EVIDENCE.md) |
-| Application | Next.js 16 app, 5 roles, 20+ screens, 41 API routes, DBMS Lab, audit log, analytics | [UI_DESIGN_DIRECTION.md](UI_DESIGN_DIRECTION.md), screenshots |
-| Semantic search | local MiniLM embeddings, hybrid ranking after hard filters | [ADVANCED_DBMS.md](ADVANCED_DBMS.md) §8 |
+| Triggers (6) | consumption balance, cost/CO₂e and provenance derivation, inventory ledger (stock deducted exactly once), audit trail, claim state machine, listing guard | [ADVANCED_DBMS.md](ADVANCED_DBMS.md) §4; Lab demos D01-D12 |
+| Stored routines | `fn_claim_surplus`, `fn_transition_claim`, `sp_close_service_session`, `fn_search_food`, `fn_waste_intensity`, `fn_ensure_waste_partitions`, `zone_root` | [DB_OBJECTS.md](DB_OBJECTS.md) |
+| Transactions and concurrency | row locks at the decision point; 10-way write-off race (exactly 3 succeed), 8-way approval race, duplicate-claim race, a deadlock found by testing and fixed | [CONCURRENCY_EVIDENCE.md](CONCURRENCY_EVIDENCE.md) |
+| Indexing and optimisation | composite, covering, partial, GIN, HNSW, BRIN; plan comparisons with and without each index | [EXPLAIN_EVIDENCE.md](EXPLAIN_EVIDENCE.md) |
+| Views and materialised view | three views, one concurrently refreshable materialised view | migration 015 |
+| Partitioning | `waste_event` by month; pruning shown by EXPLAIN | [EXPLAIN_EVIDENCE.md](EXPLAIN_EVIDENCE.md) §2 |
+| Full-text and vector search | tsvector + trigram; MiniLM embeddings, HNSW, hybrid ranking after hard filters | [ADVANCED_DBMS.md](ADVANCED_DBMS.md) §7-8 |
+| DDL lifecycle | CREATE; ALTER (added column + CHECK); DROP (unused index); safe scratch-table demonstration | migration 014, `db/demos/01_*` |
+| Query catalogue | 26 queries: joins, GROUP BY/HAVING, correlated and nested subqueries, windows, recursive CTEs, DML | [QUERY_CATALOGUE.md](QUERY_CATALOGUE.md) |
+
+## 5. Application
+
+A Next.js 16 application with five roles (zone administrator, auditor, establishment manager, establishment staff, recipient agent). Authentication uses bcrypt (cost 12) and a signed httpOnly session cookie that carries only the user id; role and active status are re-read from the database on each request. Every API route passes through origin check → session → permission → validation, and tenant scope is enforced in SQL. Screens cover registration, procurement, inventory, service sessions, waste recording, surplus listings with ranked recipients, claims, field logs and inspections (MongoDB), name matching, zone analytics, an audit log and the **DBMS Lab**, which runs the catalogue and twelve constraint demonstrations *by identifier only* (read-only or rolled back). Visual design: Linear/Stripe-inspired light and dark themes, animated figures, interactive charts with a table alternative, reduced-motion support ([UI_DESIGN_DIRECTION.md](UI_DESIGN_DIRECTION.md)).
 
 ## 6. Testing
 
-Automated suites (pytest, vitest unit, vitest integration against a disposable database, type-check, lint, production build) are run by `python scripts/run_all_tests.py`, which writes [TEST_REPORT.md](TEST_REPORT.md) from the machine-readable results. The working database is never touched by the suites. Browser QA was done with a headless browser at 1440 / 820 / 390 px.
+| Suite | Scope | Result (2026-11-01) |
+|---|---|---|
+| pytest | migrations, constraints, triggers, procedures, views, catalogue, concurrency, demos | 120 / 120 |
+| vitest unit | permission matrix, state machine, scoring, name policy, ETL adapters, validation | 46 / 46 |
+| vitest integration (disposable DB) | authentication, RBAC, workflows, ETL, concurrency, Lab API, dashboard correctness | 79 / 79 |
+| type-check, lint, production build | static quality and deployability | clean / clean / pass |
 
-## 7. Requirements coverage
+Full per-test list: [TEST_REPORT.md](TEST_REPORT.md), generated by `python scripts/run_all_tests.py`. Browser walkthroughs were run at 1440, 820 and 390 px in light and dark themes. A fresh-clone installation (git-tracked files only, new databases) was also verified; its record is in [CURRENT_STATUS.md](../CURRENT_STATUS.md).
 
-[REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md) maps Req. 1-18, the plan's 22 queries and each deviation (with reasons) to files and tests.
+## 7. Results and observations
 
-## 8. Limitations and honest notes
+* Stock integrity: after moving the deduction logic into the database, a single write-off deducts once through every path, and ten simultaneous write-offs of 3 kg against a 10 kg lot yield exactly three successes.
+* A query that exceeded its 30 s timeout (supplier spoilage) ran in under a second after a partial index suggested by its EXPLAIN plan.
+* Semantic matching: name resolution reached 88 % on 32 deliberately messy names, with abbreviations and one false positive as documented failures; fuzzy matches below 0.60 confidence are never cached.
+* Analytical queries surface the planted patterns of the synthetic data (a chronically over-preparing school, a supplier with disproportionate spoilage, monsoon-related spoilage, weekday seasonality, anomalous days).
 
-* Dataset is ~55k waste rows, not the plan's 400k; index gains on small tables are shown as plan changes, and where an index does not help the evidence says so.
-* Query 21 (forecast accuracy) was replaced because forecasting is optional Part 4 and not built.
-* The embedding model is small and English-only; abbreviations and synonyms are weak (88 % measured name resolution, one false positive).
-* Git history: the repository root is the user's home directory; nothing was initialised or committed. Per-member commits (Req. 15) need a decision.
-* The working database holds synthetic seed data plus leftovers from QA walkthroughs; `python scripts/setup_db.py --reset` restores a clean seed.
+## 8. Limitations
 
-## 9. Submission package
+* About 55 k waste events (152 days, 56 establishments) rather than the plan's 400 k; the requirements need meaningful results and plan evidence, not row counts, and on small tables the planner correctly prefers sequential scans over GIN/HNSW indexes - see [REQUIREMENTS_AUDIT.md](REQUIREMENTS_AUDIT.md) §3.
+* Query 21 (forecast accuracy) replaced by data provenance because forecasting is optional Part 4; the ALTER/DROP targets differ from the plan's example ([REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md)).
+* The embedding model is small and English-only; abbreviations and synonyms are weak.
+* Team details and individual commit history are pending ([TEAM_AND_CONTRIBUTIONS.md](TEAM_AND_CONTRIBUTIONS.md)).
+
+## 9. Conclusion
+
+ZoneFood demonstrates that zone-level food-waste intelligence is a database problem: integrity belongs in constraints and triggers, flexible field data in a document store, similarity in a vector index next to the facts, and concurrency in explicit row locks. Each claim in this report is backed by a runnable query, a migration, a test or a generated evidence document.
+
+## Technology references
+
+* PostgreSQL 16 documentation - https://www.postgresql.org/docs/16/
+* pgvector - https://github.com/pgvector/pgvector
+* MongoDB Manual - https://www.mongodb.com/docs/manual/
+* Next.js documentation - https://nextjs.org/docs
+* sentence-transformers/all-MiniLM-L6-v2 - https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+
+## Appendix: submission package
 
 | Deliverable | File |
 |---|---|
-| README, setup | [../README.md](../README.md) |
-| ER diagram, data dictionary | [ER_DIAGRAM.md](ER_DIAGRAM.md), [DATA_DICTIONARY.md](DATA_DICTIONARY.md) |
-| PostgreSQL and MongoDB design | [DATA_MODEL.md](DATA_MODEL.md), [MONGODB_DESIGN.md](MONGODB_DESIGN.md) |
-| Architecture and data flow | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| SQL catalogue | [QUERY_CATALOGUE.md](QUERY_CATALOGUE.md) |
-| Advanced DBMS, procedures, triggers | [ADVANCED_DBMS.md](ADVANCED_DBMS.md), [DB_OBJECTS.md](DB_OBJECTS.md) |
-| Indexing and EXPLAIN | [EXPLAIN_EVIDENCE.md](EXPLAIN_EVIDENCE.md) |
-| Concurrency | [CONCURRENCY_EVIDENCE.md](CONCURRENCY_EVIDENCE.md) |
-| Test reports | [TEST_REPORT.md](TEST_REPORT.md) |
-| Traceability | [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md) |
-| Screenshots | [screenshots/](screenshots/) |
+| Setup and run instructions | [../README.md](../README.md) |
+| Requirement audit and traceability | [REQUIREMENTS_AUDIT.md](REQUIREMENTS_AUDIT.md), [REQUIREMENTS_TRACEABILITY.md](REQUIREMENTS_TRACEABILITY.md) |
+| ER diagram, data dictionary, models | [ER_DIAGRAM.md](ER_DIAGRAM.md), [DATA_DICTIONARY.md](DATA_DICTIONARY.md), [DATA_MODEL.md](DATA_MODEL.md), [MONGODB_DESIGN.md](MONGODB_DESIGN.md) |
+| Architecture, decisions | [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md) |
+| SQL catalogue, advanced DBMS, objects | [QUERY_CATALOGUE.md](QUERY_CATALOGUE.md), [ADVANCED_DBMS.md](ADVANCED_DBMS.md), [DB_OBJECTS.md](DB_OBJECTS.md) |
+| EXPLAIN and concurrency evidence | [EXPLAIN_EVIDENCE.md](EXPLAIN_EVIDENCE.md), [CONCURRENCY_EVIDENCE.md](CONCURRENCY_EVIDENCE.md) |
+| Test report | [TEST_REPORT.md](TEST_REPORT.md) |
 | Demo script, viva Q&A | [DEMO_SCRIPT.md](DEMO_SCRIPT.md), [VIVA_QA.md](VIVA_QA.md) |
+| Team, screenshots | [TEAM_AND_CONTRIBUTIONS.md](TEAM_AND_CONTRIBUTIONS.md), [screenshots/](screenshots/) |

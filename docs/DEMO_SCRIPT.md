@@ -1,4 +1,4 @@
-# Faculty demo script (12 minutes)
+# Faculty demo script (12-14 minutes)
 
 Follows plan §15, with the Part 3 additions. Every step is something that runs on the real system; the "say" lines name the database concept behind what is on screen.
 
@@ -19,6 +19,7 @@ Open three browser windows (admin / manager / recipient) or use private windows.
 | Time | Step | What to do | What to say (database concept) |
 |---|---|---|---|
 | 0:00 | **1. Problem** | Admin dashboard (`/`) | Waste is a zone-level system problem: where, why, and could the surplus reach someone. Three databases, each for what it is best at (relational integrity / flexible documents / semantic vectors). KPIs, sparklines and the zone chart are live SQL aggregates, not stored numbers. |
+| 0:45 | **1b. Sign-in and roles** | Show the cinematic sign-in page; sign in as the admin; open a private window and sign in as the manager. In the manager window try `/lab` and `/etl` | Five roles, bcrypt + signed cookie. The manager is refused (access denied) - permission matrix enforced server-side, tenant scope in SQL. Then show **Register** (`/register`): a new establishment or recipient organisation is created in one transaction (establishment + profile + account). |
 | 0:45 | **2. Schema** | `docs/ER_DIAGRAM.md`, then Lab → *Database objects* | 31 tables (incl. `schema_migrations`, `waste_event` partition parent): self-referencing zone tree, disjoint subtypes, M:N tables, a monthly **partitioned** fact table. The Lab lists every table, index, view, function and trigger from the live catalog. |
 | 1:45 | **3. Establishment flow** | Manager window: Procurement → record a delivery (one line) → Inventory shows the new lot → Service → open a session → add a batch → close with leftovers | One transaction for header + lines + lots. Closing calls **`sp_close_service_session`**: consumption, plate waste, and an automatic surplus listing — show the *"Created automatically"* card. |
 | 3:45 | **4. Constraint refusal** | Close another session with served + leftover larger than prepared | Trigger **T1** refuses it; the UI shows the database's own message and **nothing was written** (the session is still open). Three layers: zod → CHECK → trigger. |

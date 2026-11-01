@@ -1,6 +1,6 @@
 # Test report
 
-_Generated 2026-11-01 17:31 by `python scripts/run_all_tests.py`. Every figure below was produced by running the suites in this repository; the per-test lists are parsed from their machine-readable reports (`reports/`)._
+_Generated 2026-11-01 18:32 by `python scripts/run_all_tests.py`. Every figure below was produced by running the suites in this repository; the per-test lists are parsed from their machine-readable reports (`reports/`)._
 
 **Overall: ALL SUITES PASSED - 245 of 245 automated tests passed**, plus type-check, lint and a production build.
 
@@ -14,12 +14,12 @@ _Generated 2026-11-01 17:31 by `python scripts/run_all_tests.py`. Every figure b
 
 | Suite | Command | Passed | Failed | Time | Result |
 |---|---|---|---|---|---|
-| Database layer (pytest) | `python -m pytest -q` | 120/120 | 0 | 51s | PASS |
-| TypeScript type-check | `npm run typecheck` | clean | - | 6s | PASS |
-| ESLint | `npm run lint` | clean | - | 14s | PASS |
-| Unit tests (vitest) | `npm test` | 46/46 | 0 | 3s | PASS |
-| Integration tests (vitest, disposable DB) | `npm run test:integration` | 79/79 | 0 | 78s | PASS |
-| Production build (Next.js) | `npm run build` | 68 routes compiled | - | 14s | PASS |
+| Database layer (pytest) | `python -m pytest -q` | 120/120 | 0 | 45s | PASS |
+| TypeScript type-check | `npm run typecheck` | clean | - | 7s | PASS |
+| ESLint | `npm run lint` | clean | - | 20s | PASS |
+| Unit tests (vitest) | `npm test` | 46/46 | 0 | 5s | PASS |
+| Integration tests (vitest, disposable DB) | `npm run test:integration` | 79/79 | 0 | 80s | PASS |
+| Production build (Next.js) | `npm run build` | 68 routes compiled | - | 20s | PASS |
 
 ## How to reproduce
 
