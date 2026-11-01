@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Building2, CircleCheck, Gift, HandHeart, Handshake, Leaf, PackageCheck, Recycle, Scale, Wallet, Wind } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Stagger } from "@/components/motion/motion";
 import { KpiCard } from "@/components/ui/kpi-card";
 import { buttonClass } from "@/components/ui/button";
 import { TrendChart } from "@/components/charts/trend-chart";
 import { ZoneChart } from "@/components/charts/zone-chart";
 import { RankedBars } from "@/components/charts/ranked-bars";
+import { RedistributionFlow, ZonePulse } from "@/components/dashboard/visuals";
 import { ActivityFeed, ExpiringLots, FeedPreview } from "@/components/dashboard/parts";
 import { requirePageUser } from "@/lib/auth/guard";
 import { ROLE_LABEL } from "@/lib/auth/permissions";
@@ -47,7 +49,7 @@ export default async function DashboardPage() {
       />
 
       {d.kind !== "recipient" && (
-        <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Stagger as="section" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <KpiCard featured label="Total food waste" icon={Scale} value={fmtNum(d.kpis.wasteKg, 0)} unit="kg" count={{ value: d.kpis.wasteKg }} spark={d.spark} delta={deltaPct(d.kpis.wasteKg, d.kpis.wasteKgPrev)} goodWhen="down" hint="vs previous 30 days" />
           <KpiCard label="Surplus available now" icon={Gift} value={fmtNum(d.kpis.surplusAvailableKg, 0)} unit="kg" count={{ value: d.kpis.surplusAvailableKg }} hint={`${d.kpis.openListings} open listing${d.kpis.openListings === 1 ? "" : "s"}`} />
           <KpiCard label="Food redistributed" icon={Handshake} value={fmtNum(d.kpis.redistributedKg, 0)} unit="kg" count={{ value: d.kpis.redistributedKg }} delta={deltaPct(d.kpis.redistributedKg, d.kpis.redistributedKgPrev)} goodWhen="up" hint="vs previous 30 days" />
@@ -58,16 +60,16 @@ export default async function DashboardPage() {
             <KpiCard label="CO₂e from waste" icon={Wind} value={fmtNum(d.kpis.co2eKg, 0)} unit="kg" count={{ value: d.kpis.co2eKg }} hint="illustrative emission factors" />
           )}
           <KpiCard label="Diversion rate" icon={Recycle} value={d.kpis.diversionPct.toFixed(0)} unit="%" count={{ value: d.kpis.diversionPct }} hint="waste kept out of landfill" />
-        </section>
+        </Stagger>
       )}
 
       {d.kind === "recipient" && (
-        <section aria-label="Key figures" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stagger as="section" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard featured label="Received (30 days)" icon={PackageCheck} value={fmtNum(d.stats.receivedKg, 0)} unit="kg" hint="collected claims" />
           <KpiCard label="Awaiting approval" icon={Handshake} value={String(d.stats.requested)} hint="requested claims" />
           <KpiCard label="Ready to collect" icon={CircleCheck} value={String(d.stats.approved)} hint="approved claims" />
           <KpiCard label="Total pickups" icon={Leaf} value={String(d.stats.collected)} hint="all time" />
-        </section>
+        </Stagger>
       )}
 
       {d.kind === "authority" && (
@@ -102,6 +104,21 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader title="Most wasted foods" description="Top 8 by weight, last 30 days" />
             <CardBody><RankedBars rows={d.topFoods.map((f) => ({ name: f.name, value: f.kg, sub: `≈ ${fmtInr(f.cost)} lost` }))} /></CardBody>
+          </Card>
+        </section>
+      )}
+
+      {d.kind !== "recipient" && (
+        <section className={d.kind === "authority" ? "grid gap-6 xl:grid-cols-2" : "grid gap-6"}>
+          {d.kind === "authority" && (
+            <Card>
+              <CardHeader title="Zone pulse" description="Share of food handled that was redistributed instead of wasted, per block, last 30 days" />
+              <CardBody><ZonePulse zones={d.zones} /></CardBody>
+            </Card>
+          )}
+          <Card>
+            <CardHeader title="Redistribution pipeline" description="Surplus offered, reserved and collected - all time" action={<Link href="/claims" className="text-sm font-medium text-accent-ink hover:underline">Claims</Link>} />
+            <CardBody><RedistributionFlow funnel={d.funnel} /></CardBody>
           </Card>
         </section>
       )}

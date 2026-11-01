@@ -3,6 +3,7 @@ import { Card } from "./card";
 import { CountUp } from "./count-up";
 import { Sparkline } from "./sparkline";
 import { cn } from "@/lib/cn";
+import { Spotlight, StaggerItem } from "@/components/motion/motion";
 
 /**
  * Headline figure with an optional period-over-period delta. `goodWhen` says which direction is good for THIS
@@ -39,7 +40,9 @@ export function KpiCard({
   const DeltaIcon = !hasDelta || Math.abs(delta) < 0.5 ? Minus : delta > 0 ? ArrowUpRight : ArrowDownRight;
 
   return (
-    <Card className={cn("relative overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-pop", featured && "bg-gradient-to-br from-accent-soft to-surface")}>
+    <StaggerItem className="min-w-0">
+    <Spotlight className="h-full">
+    <Card className={cn("glass relative h-full overflow-hidden p-5 transition-all hover:-translate-y-0.5 hover:shadow-pop", featured && "bg-gradient-to-br from-accent-soft to-surface")}>
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm font-medium text-ink-muted">{label}</p>
         <span className="grid size-9 shrink-0 place-items-center rounded-md bg-accent-soft text-accent-ink"><Icon aria-hidden className="size-[18px]" /></span>
@@ -59,5 +62,7 @@ export function KpiCard({
         {spark && <Sparkline values={spark} className="ml-auto h-7 w-24" />}
       </div>
     </Card>
+    </Spotlight>
+    </StaggerItem>
   );
 }

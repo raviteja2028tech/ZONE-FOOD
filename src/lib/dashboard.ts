@@ -4,7 +4,7 @@ import {
   getCounts, getExpiringLots, getKpis, getPendingClaimCount, getRecentActivity, getRecipientStats, getTopWastedFoods, getWasteTrend, getZoneComparison,
 } from "@/lib/db/repositories/analytics";
 import { feedForRecipient } from "@/lib/db/repositories/surplus";
-import { sparkline, wasteIntensity } from "@/lib/db/repositories/insights";
+import { rescueFunnel, sparkline, wasteIntensity } from "@/lib/db/repositories/insights";
 
 /**
  * One loader per role family so the page and /api/analytics/dashboard return identical, live data.
@@ -23,7 +23,7 @@ export async function getDashboard(user: SessionUser) {
 
   if (user.establishmentId !== null) {
     const scope = { establishmentId: user.establishmentId };
-    const [kpis, trend, topFoods, expiring, pendingClaims, activity, spark, intensity] = await Promise.all([
+    const [kpis, trend, topFoods, expiring, pendingClaims, activity, spark, intensity, funnel] = await Promise.all([
       getKpis(scope),
       getWasteTrend(scope),
       getTopWastedFoods(scope),
@@ -32,11 +32,12 @@ export async function getDashboard(user: SessionUser) {
       getRecentActivity(scope),
       sparkline(scope),
       wasteIntensity(user.establishmentId),
+      rescueFunnel(scope),
     ]);
-    return { kind: "establishment" as const, kpis, trend, topFoods, expiring, pendingClaims, activity, spark, intensity };
+    return { kind: "establishment" as const, kpis, trend, topFoods, expiring, pendingClaims, activity, spark, intensity, funnel };
   }
 
-  const [kpis, trend, topFoods, zones, counts, activity, spark] = await Promise.all([
+  const [kpis, trend, topFoods, zones, counts, activity, spark, funnel] = await Promise.all([
     getKpis({}),
     getWasteTrend({}),
     getTopWastedFoods({}),
@@ -44,8 +45,9 @@ export async function getDashboard(user: SessionUser) {
     getCounts(),
     getRecentActivity({}),
     sparkline({}),
+    rescueFunnel({}),
   ]);
-  return { kind: "authority" as const, kpis, trend, topFoods, zones, counts, activity, spark };
+  return { kind: "authority" as const, kpis, trend, topFoods, zones, counts, activity, spark, funnel };
 }
 
 export type Dashboard = Awaited<ReturnType<typeof getDashboard>>;

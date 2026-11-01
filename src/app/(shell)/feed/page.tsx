@@ -1,4 +1,5 @@
 import { Clock, MapPin, Salad } from "lucide-react";
+import { Stagger, StaggerItem } from "@/components/motion/motion";
 import { PageHeader } from "@/components/ui/page-header";
 import { Modal } from "@/components/ui/modal";
 import { Card } from "@/components/ui/card";
@@ -32,9 +33,9 @@ export default async function FeedPage() {
       {feed.length === 0 ? (
         <EmptyState icon={Salad} title="Nothing available right now">New surplus listings that fit your organisation appear here automatically. Check back soon, or make sure your need profile and pickup window are up to date.</EmptyState>
       ) : (
-        <ul className="grid gap-4 lg:grid-cols-2">
+        <Stagger as="ul" className="grid gap-4 lg:grid-cols-2">
           {feed.map((f, i) => (
-            <li key={f.listing_id}>
+            <StaggerItem as="li" key={f.listing_id}>
               <Card className="flex h-full flex-col p-5 transition-all hover:-translate-y-0.5 hover:shadow-pop">
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-accent-ink">{i === 0 ? "Best match" : `Match #${i + 1}`}</p>
@@ -58,9 +59,9 @@ export default async function FeedPage() {
                   )}
                 </div>
               </Card>
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
       )}
     </div>
   );

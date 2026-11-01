@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Toaster } from "@/components/ui/toaster";
+import { MotionProvider } from "@/components/motion/motion";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,7 +30,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="sr-only z-50 rounded-md bg-accent px-3 py-2 text-accent-on focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
           Skip to content
         </a>
-        {children}
+        <div aria-hidden className="ambient" />
+        <MotionProvider>{children}</MotionProvider>
         <Toaster />
       </body>
     </html>

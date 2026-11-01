@@ -20,7 +20,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line bg-surface lg:flex">
+      <aside className="sticky top-0 hidden h-dvh flex-col border-r border-line bg-surface/90 backdrop-blur lg:flex">
         <div className="px-5 pb-3 pt-5">
           <Brand />
         </div>
@@ -36,7 +36,7 @@ export function AppShell({ user, children }: { user: SessionUser; children: Reac
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-line bg-canvas/85 px-4 backdrop-blur lg:h-16 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-line bg-canvas/70 px-4 backdrop-blur-xl backdrop-saturate-150 lg:h-16 lg:px-8">
           <div className="flex items-center gap-3 lg:hidden">
             <MobileNav groups={groups} identity={identity} />
             <Brand />

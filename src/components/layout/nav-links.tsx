@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { NAV_ITEMS } from "./nav-config";
+import { ActivePill } from "@/components/motion/motion";
 
 // Resolved here (client side) because component functions cannot cross the server -> client boundary.
 const ICONS: Record<string, LucideIcon> = Object.fromEntries(NAV_ITEMS.map((i) => [i.label, i.icon]));
@@ -35,10 +36,11 @@ export function NavLinks({ groups, onNavigate }: { groups: NavGroup[]; onNavigat
                     onClick={onNavigate}
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      isActive ? "bg-accent-soft text-accent-ink" : "text-ink-muted hover:bg-surface-2 hover:text-ink",
+                      "group relative isolate flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                      isActive ? "text-accent-ink" : "text-ink-muted hover:bg-surface-2 hover:text-ink hover:translate-x-0.5",
                     )}
                   >
+                    {isActive && <ActivePill id="nav-active" />}
                     {isActive && <span aria-hidden className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-accent" />}
                     {Icon && <Icon aria-hidden className="size-[18px] shrink-0" />}
                     <span className="truncate">{item.label}</span>
