@@ -44,7 +44,7 @@ History 3 Jun - 30 Oct 2026 (150 days, 56 establishments). Train 1 Jul - 4 Sep, 
 | Ridge | 16.89 | 34.50 | **241.0** | **291.9** | **11.3 %** | 18 / 28 |
 | LightGBM | **15.99** | **33.09** | 253.4 | 332.2 | 11.8 % | 20 / 28 |
 
-(kg; lower is better.) **Reading:** both learned models beat the weekly baseline (zone MAE 28 % lower for Ridge). They rank differently by level: LightGBM is best per kitchen, Ridge on the zone total, where the individual errors partly cancel. The stored "best model" is chosen by zone-level RMSE, a rule fixed in advance. The page shows the actual-vs-predicted chart of these 28 days and the feature importances (LightGBM: the 7-day average carries ≈ 44 % of the gain, yesterday ≈ 18 %, the same-weekday average ≈ 12 %). Re-running the script on unchanged data gives identical numbers (fixed seed, single-threaded LightGBM).
+(kg; lower is better.) **Reading:** both learned models beat the weekly baseline (zone MAE 28 % lower for Ridge). They rank differently by level: LightGBM is best per kitchen, Ridge on the zone total, where the individual errors partly cancel. The stored "best model" is chosen by zone-level RMSE, a rule fixed in advance. The page shows the actual-vs-predicted chart of these 28 days and the feature importances (LightGBM: the 7-day average carries ≈ 44 % of the gain, yesterday ≈ 18 %, the same-weekday average ≈ 12 %). Re-running the script on unchanged data gives identical numbers (fixed seed, single-threaded LightGBM). A freshly seeded database covers a different calendar window and gives different (but qualitatively similar) numbers: in the isolated fresh-clone check the baseline's zone MAE was 287 kg/day against 240 (Ridge) and 257 (LightGBM), with LightGBM again best per kitchen.
 
 ## Honest limitations
 
