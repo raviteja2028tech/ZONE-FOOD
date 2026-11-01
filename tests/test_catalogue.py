@@ -27,6 +27,10 @@ def cat_db(seeded_db):
         c.execute("""UPDATE surplus_listing SET available_from = now() - interval '6 hours', expires_at = now() - interval '1 hour'
                       WHERE status = 'OPEN' AND expires_at > now()""")
         c.execute("ALTER TABLE surplus_listing ENABLE TRIGGER tr_audit_listing")
+    # Q27 reads a stored forecast run: train the real models on this disposable database (about 20 s).
+    import forecast
+    with psycopg.connect(pg_dsn(seeded_db)) as c:
+        forecast.run(c, log=lambda *_: None)
     return seeded_db
 
 
@@ -218,3 +222,14 @@ def test_dml_queries_return_what_they_claim(results):
     assert all(s == "EXPIRED" for s in col(results["Q24"], "status"))
     assert len(set(col(results["Q25"], "source_doc_id"))) == 1                     # one document's rows only
     assert col(results["Q26"], "method") == ["MANUAL"] and col(results["Q26"], "status") == ["RESOLVED"]
+
+
+def test_q27_forecast_accuracy_matches_the_stored_run(results, cat_db):
+    r = results["Q27"]
+    assert sorted(col(r, "model")) == ["lightgbm", "ridge", "seasonal_naive"]
+    assert col(r, "mae_kg") == sorted(col(r, "mae_kg"))                       # ordered by MAE
+    with psycopg.connect(pg_dsn(cat_db)) as c:
+        (metrics,) = c.execute("SELECT metrics FROM forecast_run ORDER BY run_id DESC LIMIT 1").fetchone()
+    for model, mae in zip(col(r, "model"), col(r, "mae_kg")):
+        assert abs(float(mae) - metrics[model]["mae_zone_day"]) < 0.06        # SQL result equals what the training script reported
+    assert all(float(v) > 0 for v in col(r, "mape_pct"))

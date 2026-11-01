@@ -2,7 +2,7 @@
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: zonefood-postgres
+    container_name: ${COMPOSE_PROJECT_NAME:-zonefood}-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
@@ -20,7 +20,7 @@ services:
 
   mongo:
     image: mongo:7
-    container_name: zonefood-mongo
+    container_name: ${COMPOSE_PROJECT_NAME:-zonefood}-mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME in .env}

@@ -1,6 +1,6 @@
 # EXPLAIN / EXPLAIN ANALYZE evidence
 
-_Generated 2026-11-01 17:24 by `python scripts/gen_part3_docs.py` against the working database (PostgreSQL 16, ~55 000 waste events - a student-laptop dataset, so absolute times are small; the **plan shapes** are the evidence). Each experiment runs the same statement twice (second run = warm cache) with `EXPLAIN (ANALYZE, BUFFERS)`. "Without" plans are produced by dropping the index **inside a transaction that is rolled back** (PostgreSQL DDL is transactional), so no index is ever lost._
+_Generated 2026-11-01 19:29 by `python scripts/gen_part3_docs.py` against the working database (PostgreSQL 16, ~55 000 waste events - a student-laptop dataset, so absolute times are small; the **plan shapes** are the evidence). Each experiment runs the same statement twice (second run = warm cache) with `EXPLAIN (ANALYZE, BUFFERS)`. "Without" plans are produced by dropping the index **inside a transaction that is rolled back** (PostgreSQL DDL is transactional), so no index is ever lost._
 
 Data volume: waste_event **55,537**, surplus_listing **4,430**, inventory_lot **19,873**.
 
@@ -14,47 +14,47 @@ SELECT sum(quantity_kg) FROM waste_event WHERE establishment_id = 1 AND occurred
 
 | Variant | Execution time |
 |---|---|
-| Without the index (all three waste indexes dr… | 1.57 ms |
-| With the index | 0.27 ms |
+| Without the index (all three waste indexes dr… | 1.14 ms |
+| With the index | 0.16 ms |
 
-Speed-up: **5.9x**.
+Speed-up: **7.1x**.
 
 ### Without the index (all three waste indexes dropped in a rolled-back txn)
 ```
-Aggregate  (cost=1502.41..1502.42 rows=1 width=32) (actual time=1.493..1.497 rows=1 loops=1)
-  ->  Append  (cost=0.00..1501.56 rows=340 width=7) (actual time=0.018..1.454 rows=314 loops=1)
+Aggregate  (cost=1502.41..1502.42 rows=1 width=32) (actual time=1.101..1.103 rows=1 loops=1)
+  ->  Append  (cost=0.00..1501.56 rows=340 width=7) (actual time=0.008..1.039 rows=314 loops=1)
         Subplans Removed: 12
-        ->  Seq Scan on waste_event_2026_10 waste_event_1  (cost=0.00..450.68 rows=311 width=6) (actual time=0.017..1.392 rows=311 loops=1)
+        ->  Seq Scan on waste_event_2026_10 waste_event_1  (cost=0.00..450.68 rows=311 width=6) (actual time=0.008..0.990 rows=311 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
               Rows Removed by Filter: 11723
-        ->  Seq Scan on waste_event_2026_11 waste_event_2  (cost=0.00..1.06 rows=3 width=6) (actual time=0.011..0.011 rows=3 loops=1)
+        ->  Seq Scan on waste_event_2026_11 waste_event_2  (cost=0.00..1.06 rows=3 width=6) (actual time=0.009..0.009 rows=3 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
-        ->  Seq Scan on waste_event_2026_12 waste_event_3  (cost=0.00..0.00 rows=1 width=16) (actual time=0.002..0.002 rows=0 loops=1)
+        ->  Seq Scan on waste_event_2026_12 waste_event_3  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
-        ->  Seq Scan on waste_event_2027_01 waste_event_4  (cost=0.00..0.00 rows=1 width=16) (actual time=0.002..0.002 rows=0 loops=1)
+        ->  Seq Scan on waste_event_2027_01 waste_event_4  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
         ->  Seq Scan on waste_event_2027_02 waste_event_5  (cost=0.00..0.00 rows=1 width=16) (actual time=0.002..0.002 rows=0 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
-        ->  Seq Scan on waste_event_2027_03 waste_event_6  (cost=0.00..0.00 rows=1 width=16) (actual time=0.002..0.002 rows=0 loops=1)
+        ->  Seq Scan on waste_event_2027_03 waste_event_6  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
 ...
 ```
 
 ### With the index
 ```
-Aggregate  (cost=267.94..267.95 rows=1 width=32) (actual time=0.193..0.195 rows=1 loops=1)
-  ->  Append  (cost=0.00..267.09 rows=340 width=7) (actual time=0.036..0.157 rows=314 loops=1)
+Aggregate  (cost=267.94..267.95 rows=1 width=32) (actual time=0.118..0.119 rows=1 loops=1)
+  ->  Append  (cost=0.00..267.09 rows=340 width=7) (actual time=0.021..0.094 rows=314 loops=1)
         Subplans Removed: 12
-        ->  Bitmap Heap Scan on waste_event_2026_10 waste_event_1  (cost=7.48..233.92 rows=311 width=6) (actual time=0.036..0.101 rows=311 loops=1)
+        ->  Bitmap Heap Scan on waste_event_2026_10 waste_event_1  (cost=7.48..233.92 rows=311 width=6) (actual time=0.021..0.062 rows=311 loops=1)
               Recheck Cond: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
               Heap Blocks: exact=22
-              ->  Bitmap Index Scan on waste_event_2026_10_establishment_id_occurred_on_idx  (cost=0.00..7.40 rows=311 width=0) (actual time=0.024..0.024 rows=342 loops=1)
+              ->  Bitmap Index Scan on waste_event_2026_10_establishment_id_occurred_on_idx  (cost=0.00..7.40 rows=311 width=0) (actual time=0.015..0.015 rows=342 loops=1)
                     Index Cond: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
-        ->  Seq Scan on waste_event_2026_11 waste_event_2  (cost=0.00..1.06 rows=3 width=6) (actual time=0.008..0.009 rows=3 loops=1)
+        ->  Seq Scan on waste_event_2026_11 waste_event_2  (cost=0.00..1.06 rows=3 width=6) (actual time=0.003..0.004 rows=3 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
-        ->  Seq Scan on waste_event_2026_12 waste_event_3  (cost=0.00..0.00 rows=1 width=16) (actual time=0.002..0.003 rows=0 loops=1)
+        ->  Seq Scan on waste_event_2026_12 waste_event_3  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
-        ->  Seq Scan on waste_event_2027_01 waste_event_4  (cost=0.00..0.00 rows=1 width=16) (actual time=0.002..0.002 rows=0 loops=1)
+        ->  Seq Scan on waste_event_2027_01 waste_event_4  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
         ->  Seq Scan on waste_event_2027_02 waste_event_5  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: ((establishment_id = 1) AND (occurred_on >= (CURRENT_DATE - 30)))
@@ -73,15 +73,15 @@ SELECT sum(quantity_kg) FROM waste_event WHERE occurred_on >= DATE '2026-10-01' 
 
 | Query | Partitions scanned | Execution time |
 |---|---|---|
-| filter on occurred_on (one month) | 1 | 3.35 ms |
-| filter on reason_id (not the key) | 27 | 6.95 ms |
+| filter on occurred_on (one month) | 1 | 2.18 ms |
+| filter on reason_id (not the key) | 27 | 6.08 ms |
 
 ### Plan - one month (pruned)
 ```
-Aggregate  (cost=420.60..420.61 rows=1 width=32) (actual time=3.322..3.324 rows=1 loops=1)
-  ->  Seq Scan on waste_event_2026_10 waste_event  (cost=0.00..390.51 rows=12034 width=6) (actual time=0.010..2.155 rows=12034 loops=1)
+Aggregate  (cost=420.60..420.61 rows=1 width=32) (actual time=2.172..2.173 rows=1 loops=1)
+  ->  Seq Scan on waste_event_2026_10 waste_event  (cost=0.00..390.51 rows=12034 width=6) (actual time=0.007..1.361 rows=12034 loops=1)
         Filter: ((occurred_on >= '2026-10-01'::date) AND (occurred_on < '2026-11-01'::date))
-Execution Time: 3.345 ms
+Execution Time: 2.184 ms
 ```
 
 Reading it: only `waste_event_2026_10` appears in the plan; the other partitions were pruned at plan time ("partition pruning").
@@ -96,31 +96,31 @@ SELECT listing_id FROM surplus_listing WHERE status IN ('OPEN','PARTIALLY_CLAIME
 
 | Variant | Execution time |
 |---|---|
-| Without the index | 0.43 ms |
-| With the partial index | 0.08 ms |
+| Without the index | 0.62 ms |
+| With the partial index | 0.03 ms |
 
-Speed-up: **5.7x**.
+Speed-up: **20.7x**.
 
 ### Without the index
 ```
-Seq Scan on surplus_listing  (cost=0.00..219.60 rows=1 width=8) (actual time=0.414..0.421 rows=9 loops=1)
+Seq Scan on surplus_listing  (cost=0.00..221.60 rows=1 width=8) (actual time=0.605..0.614 rows=9 loops=1)
   Filter: ((status = ANY ('{OPEN,PARTIALLY_CLAIMED}'::listing_status[])) AND (expires_at > (now() - '1 day'::interval)))
   Rows Removed by Filter: 4421
-Execution Time: 0.430 ms
+Execution Time: 0.621 ms
 ```
 
 ### With the partial index
 ```
-Index Scan using idx_listing_open on surplus_listing  (cost=0.14..8.16 rows=1 width=8) (actual time=0.016..0.024 rows=9 loops=1)
+Index Scan using idx_listing_open on surplus_listing  (cost=0.14..8.16 rows=1 width=8) (actual time=0.012..0.019 rows=9 loops=1)
   Index Cond: (expires_at > (now() - '1 day'::interval))
-Execution Time: 0.076 ms
+Execution Time: 0.030 ms
 ```
 
 Reading it: the index is a fraction of the size of a full one and the plan reads only live listings instead of scanning the whole table. `16 kB` for the partial index.
 
 ## 4. Index `idx_waste_lot` (migration 018) - found necessary by the query catalogue
 
-Query Q20 traces spoilage back to the supplier through each stock lot, so it looks up waste events by `lot_id` ~20,000 times. Whole of Q20 without the index: **cancelled after the 20 s limit**; with it: **938 ms**.
+Query Q20 traces spoilage back to the supplier through each stock lot, so it looks up waste events by `lot_id` ~20,000 times. Whole of Q20 without the index: **cancelled after the 20 s limit**; with it: **894 ms**.
 
 ```sql
 SELECT sum(quantity_kg) FROM waste_event WHERE lot_id = 10660
@@ -128,16 +128,16 @@ SELECT sum(quantity_kg) FROM waste_event WHERE lot_id = 10660
 
 | Variant | Execution time |
 |---|---|
-| Without the index (one lot) | 4.48 ms |
-| With the partial index (one lot) | 0.11 ms |
+| Without the index (one lot) | 3.05 ms |
+| With the partial index (one lot) | 0.08 ms |
 
-Speed-up: **41.1x**.
+Speed-up: **39.2x**.
 
 ### Without the index (one lot)
 ```
-Aggregate  (cost=1567.42..1567.43 rows=1 width=32) (actual time=4.417..4.423 rows=1 loops=1)
-  ->  Append  (cost=0.00..1567.35 rows=28 width=14) (actual time=2.380..4.408 rows=1 loops=1)
-        ->  Seq Scan on waste_event_2025_10 waste_event_1  (cost=0.00..0.00 rows=1 width=16) (actual time=0.005..0.005 rows=0 loops=1)
+Aggregate  (cost=1567.42..1567.43 rows=1 width=32) (actual time=3.006..3.011 rows=1 loops=1)
+  ->  Append  (cost=0.00..1567.35 rows=28 width=14) (actual time=1.712..3.003 rows=1 loops=1)
+        ->  Seq Scan on waste_event_2025_10 waste_event_1  (cost=0.00..0.00 rows=1 width=16) (actual time=0.003..0.003 rows=0 loops=1)
               Filter: (lot_id = 10660)
         ->  Seq Scan on waste_event_2025_11 waste_event_2  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: (lot_id = 10660)
@@ -147,7 +147,7 @@ Aggregate  (cost=1567.42..1567.43 rows=1 width=32) (actual time=4.417..4.423 row
               Filter: (lot_id = 10660)
         ->  Seq Scan on waste_event_2026_02 waste_event_5  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: (lot_id = 10660)
-        ->  Seq Scan on waste_event_2026_03 waste_event_6  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
+        ->  Seq Scan on waste_event_2026_03 waste_event_6  (cost=0.00..0.00 rows=1 width=16) (actual time=0.000..0.001 rows=0 loops=1)
               Filter: (lot_id = 10660)
         ->  Seq Scan on waste_event_2026_04 waste_event_7  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: (lot_id = 10660)
@@ -156,9 +156,9 @@ Aggregate  (cost=1567.42..1567.43 rows=1 width=32) (actual time=4.417..4.423 row
 
 ### With the partial index (one lot)
 ```
-Aggregate  (cost=42.71..42.72 rows=1 width=32) (actual time=0.056..0.058 rows=1 loops=1)
-  ->  Append  (cost=0.00..42.64 rows=28 width=14) (actual time=0.029..0.053 rows=1 loops=1)
-        ->  Seq Scan on waste_event_2025_10 waste_event_1  (cost=0.00..0.00 rows=1 width=16) (actual time=0.004..0.004 rows=0 loops=1)
+Aggregate  (cost=42.71..42.72 rows=1 width=32) (actual time=0.037..0.039 rows=1 loops=1)
+  ->  Append  (cost=0.00..42.64 rows=28 width=14) (actual time=0.019..0.035 rows=1 loops=1)
+        ->  Seq Scan on waste_event_2025_10 waste_event_1  (cost=0.00..0.00 rows=1 width=16) (actual time=0.003..0.003 rows=0 loops=1)
               Filter: (lot_id = 10660)
         ->  Seq Scan on waste_event_2025_11 waste_event_2  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: (lot_id = 10660)
@@ -166,7 +166,7 @@ Aggregate  (cost=42.71..42.72 rows=1 width=32) (actual time=0.056..0.058 rows=1 
               Filter: (lot_id = 10660)
         ->  Seq Scan on waste_event_2026_01 waste_event_4  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: (lot_id = 10660)
-        ->  Seq Scan on waste_event_2026_02 waste_event_5  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
+        ->  Seq Scan on waste_event_2026_02 waste_event_5  (cost=0.00..0.00 rows=1 width=16) (actual time=0.000..0.000 rows=0 loops=1)
               Filter: (lot_id = 10660)
         ->  Seq Scan on waste_event_2026_03 waste_event_6  (cost=0.00..0.00 rows=1 width=16) (actual time=0.001..0.001 rows=0 loops=1)
               Filter: (lot_id = 10660)
@@ -187,28 +187,28 @@ SELECT food_id FROM food_item WHERE canonical_name % 'panner butter masala'
 
 | Variant | Execution time |
 |---|---|
-| Default plan (planner's own choice) | 0.16 ms |
-| Forced to use the index (enable_seqscan = off) | 0.06 ms |
+| Default plan (planner's own choice) | 0.17 ms |
+| Forced to use the index (enable_seqscan = off) | 0.10 ms |
 
-Speed-up: **2.9x**.
+Speed-up: **1.8x**.
 
 ### Default plan (planner's own choice)
 ```
-Seq Scan on food_item  (cost=0.00..22.01 rows=2 width=4) (actual time=0.071..0.157 rows=2 loops=1)
+Seq Scan on food_item  (cost=0.00..22.01 rows=2 width=4) (actual time=0.086..0.168 rows=2 loops=1)
   Filter: ((canonical_name)::text % 'panner butter masala'::text)
   Rows Removed by Filter: 79
-Execution Time: 0.163 ms
+Execution Time: 0.174 ms
 ```
 
 ### Forced to use the index (enable_seqscan = off)
 ```
-Bitmap Heap Scan on food_item  (cost=92.58..98.76 rows=2 width=4) (actual time=0.036..0.048 rows=2 loops=1)
+Bitmap Heap Scan on food_item  (cost=92.58..98.76 rows=2 width=4) (actual time=0.056..0.075 rows=2 loops=1)
   Recheck Cond: ((canonical_name)::text % 'panner butter masala'::text)
   Rows Removed by Index Recheck: 7
   Heap Blocks: exact=6
-  ->  Bitmap Index Scan on idx_food_trgm  (cost=0.00..92.58 rows=2 width=0) (actual time=0.023..0.024 rows=9 loops=1)
+  ->  Bitmap Index Scan on idx_food_trgm  (cost=0.00..92.58 rows=2 width=0) (actual time=0.035..0.035 rows=9 loops=1)
         Index Cond: ((canonical_name)::text % 'panner butter masala'::text)
-Execution Time: 0.056 ms
+Execution Time: 0.096 ms
 ```
 
 Reading it: both return the same rows; the index plan is a `Bitmap Index Scan on idx_food_trgm`. We do not claim a speed-up on 81 rows - the evidence is that the index is usable and chosen once the table is large.
@@ -223,35 +223,35 @@ SELECT food_id FROM food_item WHERE name_embedding IS NOT NULL ORDER BY name_emb
 
 | Variant | Execution time |
 |---|---|
-| Default plan | 0.05 ms |
-| Forced index plan (enable_seqscan = off) | 0.14 ms |
+| Default plan | 0.08 ms |
+| Forced index plan (enable_seqscan = off) | 0.10 ms |
 
-Speed-up: **0.4x**.
+Speed-up: **0.8x**.
 
 ### Default plan
 ```
-Limit  (cost=31.52..31.53 rows=5 width=12) (actual time=0.043..0.044 rows=5 loops=1)
+Limit  (cost=31.52..31.53 rows=5 width=12) (actual time=0.064..0.065 rows=5 loops=1)
   InitPlan 1 (returns $0)
-    ->  Index Scan using food_item_pkey on food_item food_item_1  (cost=0.14..8.16 rows=1 width=1544) (actual time=0.003..0.004 rows=1 loops=1)
+    ->  Index Scan using food_item_pkey on food_item food_item_1  (cost=0.14..8.16 rows=1 width=1544) (actual time=0.005..0.006 rows=1 loops=1)
           Index Cond: (food_id = 1)
-  ->  Sort  (cost=23.36..23.56 rows=81 width=12) (actual time=0.043..0.043 rows=5 loops=1)
+  ->  Sort  (cost=23.36..23.56 rows=81 width=12) (actual time=0.063..0.064 rows=5 loops=1)
         Sort Key: ((food_item.name_embedding <=> $0))
         Sort Method: top-N heapsort  Memory: 25kB
-        ->  Seq Scan on food_item  (cost=0.00..22.01 rows=81 width=12) (actual time=0.008..0.034 rows=81 loops=1)
+        ->  Seq Scan on food_item  (cost=0.00..22.01 rows=81 width=12) (actual time=0.012..0.049 rows=81 loops=1)
               Filter: (name_embedding IS NOT NULL)
-Execution Time: 0.054 ms
+Execution Time: 0.081 ms
 ```
 
 ### Forced index plan (enable_seqscan = off)
 ```
-Limit  (cost=96.77..102.02 rows=5 width=12) (actual time=0.117..0.122 rows=5 loops=1)
+Limit  (cost=96.77..102.02 rows=5 width=12) (actual time=0.083..0.087 rows=5 loops=1)
   InitPlan 1 (returns $0)
     ->  Index Scan using food_item_pkey on food_item food_item_1  (cost=0.14..8.16 rows=1 width=1544) (actual time=0.007..0.007 rows=1 loops=1)
           Index Cond: (food_id = 1)
-  ->  Index Scan using idx_food_name_vec on food_item  (cost=88.61..173.62 rows=81 width=12) (actual time=0.117..0.120 rows=5 loops=1)
+  ->  Index Scan using idx_food_name_vec on food_item  (cost=88.61..173.62 rows=81 width=12) (actual time=0.082..0.086 rows=5 loops=1)
         Order By: (name_embedding <=> $0)
         Filter: (name_embedding IS NOT NULL)
-Execution Time: 0.140 ms
+Execution Time: 0.104 ms
 ```
 
 Reading it: `Index Scan using idx_food_name_vec` with `Order By: (name_embedding <=> ...)` replaces sort-all-rows. At 81 rows the exact scan is as fast; the index matters at thousands of listings.
@@ -262,10 +262,10 @@ Q03 is written with a correlated subquery because that is the textbook form (and
 
 | Variant | Wall time | Rows |
 |---|---|---|
-| Q03 as catalogued (correlated subquery) | 1573 ms | 29 |
-| Window-function rewrite | 27 ms | 29 |
+| Q03 as catalogued (correlated subquery) | 1701 ms | 29 |
+| Window-function rewrite | 21 ms | 29 |
 
-Results identical: **True**. Speed-up: **58.3x**.
+Results identical: **True**. Speed-up: **81.6x**.
 
 ```sql
 WITH per_est AS (
@@ -294,42 +294,42 @@ SELECT month, SUM(waste_kg), SUM(diverted_kg) FROM mv_zone_monthly GROUP BY mont
 
 | Variant | Execution time |
 |---|---|
-| Aggregate the base table | 52.88 ms |
-| Read the materialised view | 0.07 ms |
+| Aggregate the base table | 41.48 ms |
+| Read the materialised view | 0.28 ms |
 
-Speed-up: **714.6x**.
+Speed-up: **146.0x**.
 
 ### Aggregate the base table
 ```
-Finalize GroupAggregate  (cost=2826.84..2869.53 rows=152 width=68) (actual time=45.120..52.759 rows=6 loops=1)
+Finalize GroupAggregate  (cost=2826.84..2869.53 rows=152 width=68) (actual time=35.386..41.376 rows=6 loops=1)
   Group Key: ((date_trunc('month'::text, (w.occurred_on)::timestamp with time zone))::date)
-  ->  Gather Merge  (cost=2826.84..2862.31 rows=304 width=68) (actual time=45.108..52.737 rows=9 loops=1)
+  ->  Gather Merge  (cost=2826.84..2862.31 rows=304 width=68) (actual time=35.378..41.360 rows=9 loops=1)
         Workers Planned: 2
         Workers Launched: 2
-        ->  Sort  (cost=1826.81..1827.19 rows=152 width=68) (actual time=21.687..21.710 rows=3 loops=3)
+        ->  Sort  (cost=1826.81..1827.19 rows=152 width=68) (actual time=17.329..17.337 rows=3 loops=3)
               Sort Key: ((date_trunc('month'::text, (w.occurred_on)::timestamp with time zone))::date)
               Sort Method: quicksort  Memory: 25kB
               Worker 0:  Sort Method: quicksort  Memory: 25kB
               Worker 1:  Sort Method: quicksort  Memory: 25kB
-              ->  Partial HashAggregate  (cost=1817.88..1821.30 rows=152 width=68) (actual time=21.624..21.648 rows=3 loops=3)
+              ->  Partial HashAggregate  (cost=1817.88..1821.30 rows=152 width=68) (actual time=17.304..17.313 rows=3 loops=3)
                     Group Key: (date_trunc('month'::text, (w.occurred_on)::timestamp with time zone))::date
                     Batches: 1  Memory Usage: 40kB
                     Worker 0:  Batches: 1  Memory Usage: 40kB
                     Worker 1:  Batches: 1  Memory Usage: 40kB
-                    ->  Hash Join  (cost=2.35..1661.62 rows=20835 width=11) (actual time=0.166..17.398 rows=17305 loops=3)
+                    ->  Hash Join  (cost=2.35..1661.62 rows=20835 width=11) (actual time=0.172..13.747 rows=17305 loops=3)
 ...
 ```
 
 ### Read the materialised view
 ```
-Sort  (cost=7.69..7.70 rows=6 width=68) (actual time=0.060..0.061 rows=6 loops=1)
+Sort  (cost=7.69..7.70 rows=6 width=68) (actual time=0.192..0.193 rows=6 loops=1)
   Sort Key: month
   Sort Method: quicksort  Memory: 25kB
-  ->  HashAggregate  (cost=7.52..7.61 rows=6 width=68) (actual time=0.055..0.057 rows=6 loops=1)
+  ->  HashAggregate  (cost=7.52..7.61 rows=6 width=68) (actual time=0.181..0.185 rows=6 loops=1)
         Group Key: month
         Batches: 1  Memory Usage: 24kB
-        ->  Seq Scan on mv_zone_monthly  (cost=0.00..6.01 rows=201 width=17) (actual time=0.004..0.015 rows=201 loops=1)
-Execution Time: 0.074 ms
+        ->  Seq Scan on mv_zone_monthly  (cost=0.00..6.01 rows=201 width=17) (actual time=0.011..0.038 rows=201 loops=1)
+Execution Time: 0.284 ms
 ```
 
 Reading it: the base query scans and aggregates every partition; the view reads a few hundred pre-aggregated rows. Trade-off: the view is stale until refreshed - the DBMS Lab page and `sp`-free `REFRESH` statement do that on demand.
@@ -344,27 +344,27 @@ SELECT count(*) FROM redistribution_claim WHERE recipient_id = 1 AND status = 'R
 
 | Variant | Execution time |
 |---|---|
-| Index scans disabled | 0.20 ms |
-| Normal planner | 0.02 ms |
+| Index scans disabled | 0.18 ms |
+| Normal planner | 0.03 ms |
 
-Speed-up: **9.3x**.
+Speed-up: **5.4x**.
 
 ### Index scans disabled
 ```
-Aggregate  (cost=96.04..96.05 rows=1 width=8) (actual time=0.185..0.186 rows=1 loops=1)
-  ->  Seq Scan on redistribution_claim  (cost=0.00..96.04 rows=1 width=0) (actual time=0.183..0.183 rows=2 loops=1)
+Aggregate  (cost=96.07..96.08 rows=1 width=8) (actual time=0.174..0.174 rows=1 loops=1)
+  ->  Seq Scan on redistribution_claim  (cost=0.00..96.07 rows=1 width=0) (actual time=0.171..0.172 rows=3 loops=1)
         Filter: ((recipient_id = 1) AND (status = 'REQUESTED'::claim_status))
-        Rows Removed by Filter: 3934
-Execution Time: 0.196 ms
+        Rows Removed by Filter: 3935
+Execution Time: 0.182 ms
 ```
 
 ### Normal planner
 ```
-Aggregate  (cost=8.30..8.31 rows=1 width=8) (actual time=0.011..0.011 rows=1 loops=1)
-  ->  Index Only Scan using idx_claim_recipient on redistribution_claim  (cost=0.28..8.30 rows=1 width=0) (actual time=0.008..0.008 rows=2 loops=1)
+Aggregate  (cost=8.30..8.31 rows=1 width=8) (actual time=0.018..0.019 rows=1 loops=1)
+  ->  Index Only Scan using idx_claim_recipient on redistribution_claim  (cost=0.28..8.30 rows=1 width=0) (actual time=0.015..0.016 rows=3 loops=1)
         Index Cond: ((recipient_id = 1) AND (status = 'REQUESTED'::claim_status))
-        Heap Fetches: 2
-Execution Time: 0.021 ms
+        Heap Fetches: 3
+Execution Time: 0.034 ms
 ```
 
 Reading it: with indexes disabled PostgreSQL falls back to a sequential scan of the claims table.

@@ -1,38 +1,42 @@
 # Database object inventory
 
-_Generated 2026-11-01 17:24 from the live catalogue (`pg_class`, `pg_index`, `pg_proc`, `pg_trigger`). The app's DBMS Lab → Objects tab shows the same, live._
+_Generated 2026-11-01 19:29 from the live catalogue (`pg_class`, `pg_index`, `pg_proc`, `pg_trigger`). The app's DBMS Lab → Objects tab shows the same, live._
 
 Extensions: pg_trgm 1.6, plpgsql 1.0, vector 0.8.7.
 
-## Tables (31; `waste_event` has 28 partitions)
+## Tables (35; `waste_event` has 28 partitions)
 
 | Table | Kind | ≈ rows |
 |---|---|---|
-| app_user | table | 80 |
-| audit_log | table | 1 |
+| app_user | table | 81 |
+| audit_log | table | 10 |
 | commercial_profile | table | 20 |
 | consumption_record | table | 21975 |
 | dish | table | 264 |
 | dish_ingredient | table | 835 |
 | disposal_route | table | 5 |
 | emission_factor | table | 15 |
-| establishment | table | 56 |
+| establishment | table | 57 |
 | establishment_category | table | 13 |
 | etl_run_log | table | 2 |
 | food_alias | table | 18 |
 | food_category | table | 15 |
 | food_item | table | 81 |
-| institutional_profile | table | 12 |
+| forecast_eval_daily | table | 84 |
+| forecast_importance | table | 66 |
+| forecast_prediction | table | 168 |
+| forecast_run | table | 1 |
+| institutional_profile | table | 13 |
 | inventory_lot | table | 19873 |
 | locality_event | table | 6 |
 | preparation_batch | table | 21986 |
 | procurement | table | 7895 |
 | procurement_line | table | 19873 |
 | recipient_org | table | 8 |
-| redistribution_claim | table | 3936 |
+| redistribution_claim | table | 3938 |
 | residential_profile | table | 24 |
-| schema_migrations | table | 18 |
-| service_session | table | 9510 |
+| schema_migrations | table | 19 |
+| service_session | table | 9511 |
 | supplier | table | 9 |
 | surplus_listing | table | 4430 |
 | waste_event | partitioned | 55537 |
@@ -49,7 +53,7 @@ Extensions: pg_trgm 1.6, plpgsql 1.0, vector 0.8.7.
 | v_preparation_efficiency | view | Per closed session: prepared vs served kg, utilisation %, turnout % vs expected headcount. |
 | v_redistribution_performance | view | Per establishment: listings, offered/reserved/collected kg, rescue rate, hours to first pickup. |
 
-## Indexes on parent tables (77)
+## Indexes on parent tables (82)
 
 | Index | Table | Method | Partial | Unique | Size |
 |---|---|---|---|---|---|
@@ -87,6 +91,11 @@ Extensions: pg_trgm 1.6, plpgsql 1.0, vector 0.8.7.
 | idx_food_fts | food_item | gin |  |  | 40 kB |
 | idx_food_name_vec | food_item | hnsw |  |  | 176 kB |
 | idx_food_trgm | food_item | gin |  |  | 88 kB |
+| forecast_eval_daily_pkey | forecast_eval_daily | btree |  | yes | 16 kB |
+| forecast_importance_pkey | forecast_importance | btree |  | yes | 16 kB |
+| forecast_prediction_pkey | forecast_prediction | btree |  | yes | 40 kB |
+| idx_forecast_pred_estab | forecast_prediction | btree |  |  | 16 kB |
+| forecast_run_pkey | forecast_run | btree |  | yes | 16 kB |
 | institutional_profile_pkey | institutional_profile | btree |  | yes | 16 kB |
 | idx_lot_expiry | inventory_lot | btree | yes |  | 16 kB |
 | idx_lot_food | inventory_lot | btree |  |  | 192 kB |
@@ -115,7 +124,7 @@ Extensions: pg_trgm 1.6, plpgsql 1.0, vector 0.8.7.
 | supplier_pkey | supplier | btree |  | yes | 16 kB |
 | idx_listing_estab | surplus_listing | btree |  |  | 184 kB |
 | idx_listing_open | surplus_listing | btree | yes |  | 16 kB |
-| idx_listing_vec | surplus_listing | hnsw |  |  | 56 kB |
+| idx_listing_vec | surplus_listing | hnsw |  |  | 64 kB |
 | surplus_listing_pkey | surplus_listing | btree |  | yes | 120 kB |
 | idx_waste_estab_date | waste_event | btree |  |  | 0 bytes |
 | idx_waste_food_date | waste_event | btree |  |  | 0 bytes |

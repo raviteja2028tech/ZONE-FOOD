@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, startTransition } from "react";
 import { useSubmit } from "@/lib/client-api";
 import { Field, FormError, Input } from "@/components/ui/fields";
 import { FormActions } from "@/components/ui/form-actions";
@@ -16,7 +16,7 @@ export function LoginForm({ demo }: { demo: DemoAccount[] }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [show, setShow] = useState(false);
-  const { submit, pending, error, fields } = useSubmit({ url: "/api/auth/login", refresh: false, onSuccess: () => { router.replace("/"); router.refresh(); } });
+  const { submit, pending, error, fields } = useSubmit({ url: "/api/auth/login", refresh: false, onSuccess: () => startTransition(() => { router.replace("/"); router.refresh(); }) });
 
   return (
     <>

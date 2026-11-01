@@ -20,7 +20,9 @@ function run(...args: string[]) {
 export async function setup() {
   run("scripts/migrate.py", "reset", "--yes", "--db", TEST_DB);
   run("scripts/mongo_init.py", "--db", TEST_DB, "--drop");
-  run("scripts/seed.py", "--db", TEST_DB, "--mongo-db", TEST_DB, "--days", "45", "--end-date", new Date(Date.now() - 86_400_000).toISOString().slice(0, 10));
+  run("scripts/seed.py", "--db", TEST_DB, "--mongo-db", TEST_DB, "--days", "110", "--end-date", new Date(Date.now() - 86_400_000).toISOString().slice(0, 10));
+  // Forecasting needs ~100 days of history: train the real models on the disposable database too.
+  run("scripts/forecast.py", "--db", TEST_DB);
 }
 
 export async function teardown() {

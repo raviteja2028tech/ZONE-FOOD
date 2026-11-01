@@ -1,8 +1,8 @@
 # SQL query catalogue
 
-_Generated 2026-11-01 17:24 by `python scripts/gen_part3_docs.py` - every query below was **executed** against the live PostgreSQL database and the output shown is what it returned. Source: `db/queries/Qnn_*.sql`._
+_Generated 2026-11-01 19:29 by `python scripts/gen_part3_docs.py` - every query below was **executed** against the live PostgreSQL database and the output shown is what it returned. Source: `db/queries/Qnn_*.sql`._
 
-**26 of 26 queries executed and returned rows.** The PDF asks for 22; ZoneFood has 26: the 22 analytical queries (PDF query 21, forecast accuracy, needs the Part 4 forecasting tables, so Q21 is a data-provenance report instead) plus four data-manipulation statements (Q23-Q26). DML queries are always run inside a transaction that is **rolled back**, so running the catalogue never changes your data.
+**27 of 27 queries executed and returned rows.** The PDF asks for 22; ZoneFood has 27: 23 analytical queries (Q21 is a data-provenance report; the PDF's forecast-accuracy query is Q27, which reads the stored forecast run) plus four data-manipulation statements (Q23-Q26). DML queries are always run inside a transaction that is **rolled back**, so running the catalogue never changes your data.
 
 Run one yourself: `python scripts/catalogue.py Q03` · all: `python scripts/catalogue.py` · or in the app: **DBMS Lab** page (zone admin / auditor).
 
@@ -10,38 +10,39 @@ Run one yourself: `python scripts/catalogue.py Q03` · all: `python scripts/cata
 
 | # | Title | Mode | Rows | ms |
 |---|---|---|---|---|
-| Q01 | Zone waste summary by block and establishment kind | select | 22 | 129 |
-| Q02 | Top 10 wasted foods with share of the zone total | select | 10 | 22 |
-| Q03 | Establishments above their own category's per-capita waste average | select | 29 | 1964 |
-| Q04 | Pre- versus post-consumer waste per kind, with a grand total | select | 8 | 33 |
-| Q05 | Chronic over-preparers (utilisation below 75% on at least 10 sessions) | select | 32 | 63 |
-| Q06 | Turnout versus utilisation correlation per establishment | select | 15 | 46 |
-| Q07 | Day-of-week waste profile | select | 7 | 38 |
-| Q08 | Waste on locality-event days versus ordinary days | select | 6 | 103 |
-| Q09 | Stock expiring soon, ranked by value at risk | select | 15 | 7 |
-| Q10 | Rescue funnel - offered, requested, approved, collected | select | 5 | 31 |
-| Q11 | Recipients with idle capacity while surplus expired unclaimed nearby | select | 2 | 16 |
-| Q12 | Median hours from listing to pickup, per establishment kind | select | 5 | 9 |
-| Q13 | Diversion rate by month with month-on-month change | select | 6 | 5 |
-| Q14 | Monetary loss and CO2e per establishment, last full quarter | select | 15 | 62 |
-| Q15 | Anomalous waste days (z-score above 2.5 against the trailing 28 days) | select | 15 | 79 |
+| Q01 | Zone waste summary by block and establishment kind | select | 22 | 31 |
+| Q02 | Top 10 wasted foods with share of the zone total | select | 10 | 15 |
+| Q03 | Establishments above their own category's per-capita waste average | select | 29 | 1654 |
+| Q04 | Pre- versus post-consumer waste per kind, with a grand total | select | 8 | 30 |
+| Q05 | Chronic over-preparers (utilisation below 75% on at least 10 sessions) | select | 32 | 45 |
+| Q06 | Turnout versus utilisation correlation per establishment | select | 15 | 54 |
+| Q07 | Day-of-week waste profile | select | 7 | 34 |
+| Q08 | Waste on locality-event days versus ordinary days | select | 6 | 95 |
+| Q09 | Stock expiring soon, ranked by value at risk | select | 15 | 5 |
+| Q10 | Rescue funnel - offered, requested, approved, collected | select | 5 | 9 |
+| Q11 | Recipients with idle capacity while surplus expired unclaimed nearby | select | 2 | 12 |
+| Q12 | Median hours from listing to pickup, per establishment kind | select | 5 | 8 |
+| Q13 | Diversion rate by month with month-on-month change | select | 6 | 4 |
+| Q14 | Monetary loss and CO2e per establishment, last full quarter | select | 15 | 73 |
+| Q15 | Anomalous waste days (z-score above 2.5 against the trailing 28 days) | select | 15 | 74 |
 | Q16 | Rolling 7-day average waste for one establishment | select | 21 | 8 |
-| Q17 | Peer rank and percentile within each establishment category | select | 30 | 24 |
-| Q18 | Recursive roll-up of waste through the zone hierarchy | select | 31 | 19 |
-| Q19 | Ingredient-level exposure to wasted dishes | select | 11 | 79 |
-| Q20 | Suppliers whose deliveries most often end in spoilage | select | 9 | 1018 |
-| Q21 | Data provenance - how each establishment kind's waste figures were captured | select | 7 | 56 |
-| Q22 | Semantic top-5 recipients for a listing (pgvector) | select | 5 | 6 |
-| Q23 | INSERT ... SELECT - list near-expiry, still-edible stock as surplus | dml | 3 | 36 |
-| Q24 | UPDATE - mark listings that passed their expiry as EXPIRED | dml | 12 | 7 |
-| Q25 | DELETE with a subquery - purge one imported document's rows so it can be re-synced | dml | 3 | 20 |
-| Q26 | INSERT ... ON CONFLICT (upsert) - teach the name matcher a new alias | dml | 1 | 5 |
+| Q17 | Peer rank and percentile within each establishment category | select | 30 | 22 |
+| Q18 | Recursive roll-up of waste through the zone hierarchy | select | 31 | 12 |
+| Q19 | Ingredient-level exposure to wasted dishes | select | 11 | 98 |
+| Q20 | Suppliers whose deliveries most often end in spoilage | select | 9 | 987 |
+| Q21 | Data provenance - how each establishment kind's waste figures were captured | select | 7 | 47 |
+| Q22 | Semantic top-5 recipients for a listing (pgvector) | select | 5 | 9 |
+| Q23 | INSERT ... SELECT - list near-expiry, still-edible stock as surplus | dml | 3 | 38 |
+| Q24 | UPDATE - mark listings that passed their expiry as EXPIRED | dml | 12 | 14 |
+| Q25 | DELETE with a subquery - purge one imported document's rows so it can be re-synced | dml | 3 | 52 |
+| Q26 | INSERT ... ON CONFLICT (upsert) - teach the name matcher a new alias | dml | 1 | 10 |
+| Q27 | Forecast accuracy per model (MAE, RMSE, MAPE) on the held-out test days | select | 3 | 7 |
 
 ## DBMS-feature coverage
 
 | Feature | Queries |
 |---|---|
-| SELECT | Q01-Q22 |
+| SELECT | Q01-Q22, Q27 |
 | INSERT (… SELECT, RETURNING) | Q23 |
 | INSERT … ON CONFLICT (upsert) | Q26 |
 | UPDATE | Q24 |
@@ -84,7 +85,7 @@ SELECT b.zone_name                              AS block,
  ORDER BY b.zone_name, waste_kg DESC;
 ```
 
-**Result** (22 row(s) in 129 ms - first 8 shown):
+**Result** (22 row(s) in 31 ms - first 8 shown):
 
 | block | establishment_kind | establishments | waste_kg | cost_inr |
 |---|---|---|---|---|
@@ -124,7 +125,7 @@ SELECT food,
  LIMIT 10;
 ```
 
-**Result** (10 row(s) in 22 ms - first 8 shown):
+**Result** (10 row(s) in 15 ms - first 8 shown):
 
 | food | waste_kg | pct_of_zone_total | cumulative_pct | cost_inr |
 |---|---|---|---|---|
@@ -167,7 +168,7 @@ HAVING SUM(w.quantity_kg) / e.capacity > (
  ORDER BY kg_per_capita DESC;
 ```
 
-**Result** (29 row(s) in 1964 ms - first 8 shown):
+**Result** (29 row(s) in 1654 ms - first 8 shown):
 
 | name | category_name | kg_per_capita |
 |---|---|---|
@@ -203,7 +204,7 @@ SELECT COALESCE(ec.kind::text, 'ALL KINDS')                                     
  ORDER BY ec.kind NULLS LAST;
 ```
 
-**Result** (8 row(s) in 33 ms):
+**Result** (8 row(s) in 30 ms):
 
 | establishment_kind | pre_consumer_kg | post_consumer_kg | total_kg | pre_consumer_pct |
 |---|---|---|---|---|
@@ -239,7 +240,7 @@ HAVING COUNT(*) >= 10
  ORDER BY poor_sessions DESC;
 ```
 
-**Result** (32 row(s) in 63 ms - first 8 shown):
+**Result** (32 row(s) in 45 ms - first 8 shown):
 
 | name | category_name | poor_sessions | avg_utilisation_pct | unconsumed_kg |
 |---|---|---|---|---|
@@ -274,7 +275,7 @@ HAVING COUNT(*) >= 30
  LIMIT 15;
 ```
 
-**Result** (15 row(s) in 46 ms - first 8 shown):
+**Result** (15 row(s) in 54 ms - first 8 shown):
 
 | name | sessions | turnout_utilisation_corr | avg_turnout_pct |
 |---|---|---|---|
@@ -307,7 +308,7 @@ SELECT EXTRACT(DOW FROM occurred_on)::int                    AS dow,
  ORDER BY dow;
 ```
 
-**Result** (7 row(s) in 38 ms):
+**Result** (7 row(s) in 34 ms):
 
 | dow | weekday | days_observed | total_kg | avg_kg_per_day |
 |---|---|---|---|---|
@@ -350,7 +351,7 @@ SELECT COALESCE(ed.event_type, 'NO EVENT')                       AS day_type,
  ORDER BY avg_kg_per_capita DESC;
 ```
 
-**Result** (6 row(s) in 103 ms):
+**Result** (6 row(s) in 95 ms):
 
 | day_type | establishment_days | avg_kg_per_establishment_day | avg_kg_per_capita |
 |---|---|---|---|
@@ -390,18 +391,18 @@ SELECT e.name                                  AS establishment,
  LIMIT 15;
 ```
 
-**Result** (15 row(s) in 7 ms - first 8 shown):
+**Result** (15 row(s) in 5 ms - first 8 shown):
 
 | establishment | food | qty_left | base_unit | value_at_risk_inr | hours_left | urgency | value_rank |
 |---|---|---|---|---|---|---|---|
-| Northfield Engineering College Mess | Ghee | 33.715 | kg | 21372 | 37 | under 72 h | 1 |
-| Northfield Engineering College Mess | Green Peas | 134.096 | kg | 12909 | 62 | under 72 h | 2 |
-| Riverside Recreation Club | Sweets (Mithai) | 28.893 | kg | 11717 | 14 | under 24 h | 3 |
-| Northfield Engineering College Mess | Onion | 300.380 | kg | 10429 | 61 | under 72 h | 4 |
-| The Saffron Table | Sweets (Mithai) | 25.861 | kg | 10009 | 14 | under 24 h | 5 |
-| Lakeside Club | Sweets (Mithai) | 27.387 | kg | 9531 | 14 | under 24 h | 6 |
-| Biryani House No. 9 | Paneer | 30.180 | kg | 9441 | 37 | under 72 h | 7 |
-| Northfield Engineering College Mess | Curd | 123.049 | kg | 8602 | 37 | under 72 h | 8 |
+| Northfield Engineering College Mess | Ghee | 33.715 | kg | 21372 | 35 | under 72 h | 1 |
+| Northfield Engineering College Mess | Green Peas | 134.096 | kg | 12909 | 60 | under 72 h | 2 |
+| Riverside Recreation Club | Sweets (Mithai) | 28.893 | kg | 11717 | 12 | under 24 h | 3 |
+| Northfield Engineering College Mess | Onion | 300.380 | kg | 10429 | 59 | under 72 h | 4 |
+| The Saffron Table | Sweets (Mithai) | 25.861 | kg | 10009 | 12 | under 24 h | 5 |
+| Lakeside Club | Sweets (Mithai) | 27.387 | kg | 9531 | 12 | under 24 h | 6 |
+| Biryani House No. 9 | Paneer | 30.180 | kg | 9441 | 35 | under 72 h | 7 |
+| Northfield Engineering College Mess | Curd | 123.049 | kg | 8602 | 35 | under 72 h | 8 |
 
 **Explanation:** Rows are the biggest losses about to happen. urgency says how soon, and value_rank is the window RANK() by money at risk.
 
@@ -444,14 +445,14 @@ SELECT o.kind,
  ORDER BY rescue_rate_pct DESC NULLS LAST;
 ```
 
-**Result** (5 row(s) in 31 ms):
+**Result** (5 row(s) in 9 ms):
 
 | kind | listings | offered_kg | claims | approved | collected | collected_kg | rescue_rate_pct |
 |---|---|---|---|---|---|---|---|
 | RETAIL_FOOD | 88 | 373 | 80 | 74 | 74 | 229 | 61.3 |
 | ORGANIZATIONAL | 358 | 5672 | 364 | 334 | 333 | 3433 | 60.5 |
 | EDUCATIONAL | 1632 | 37076 | 1548 | 1439 | 1437 | 22251 | 60.0 |
-| COMMERCIAL | 1912 | 11964 | 1741 | 1588 | 1588 | 6737 | 56.3 |
+| COMMERCIAL | 1912 | 11964 | 1743 | 1588 | 1588 | 6737 | 56.3 |
 | RECREATIONAL | 228 | 1666 | 203 | 188 | 186 | 852 | 51.1 |
 
 **Explanation:** One row per kind, from listings offered down to kilograms actually collected. rescue_rate_pct is collected over offered.
@@ -483,7 +484,7 @@ SELECT r.org_name,
  ORDER BY x.lost_kg DESC;
 ```
 
-**Result** (2 row(s) in 16 ms):
+**Result** (2 row(s) in 12 ms):
 
 | org_name | org_type | daily_capacity_kg | expired_listings | unclaimed_kg |
 |---|---|---|---|---|
@@ -512,7 +513,7 @@ SELECT ec.kind,
  ORDER BY median_hours;
 ```
 
-**Result** (5 row(s) in 9 ms):
+**Result** (5 row(s) in 8 ms):
 
 | kind | pickups | median_hours | p90_hours |
 |---|---|---|---|
@@ -545,7 +546,7 @@ SELECT month,
  ORDER BY month;
 ```
 
-**Result** (6 row(s) in 5 ms):
+**Result** (6 row(s) in 4 ms):
 
 | month | waste_kg | diversion_pct | change_vs_prev_month_pts |
 |---|---|---|---|
@@ -578,7 +579,7 @@ SELECT v.name,
  LIMIT 15;
 ```
 
-**Result** (15 row(s) in 62 ms - first 8 shown):
+**Result** (15 row(s) in 73 ms - first 8 shown):
 
 | name | waste_kg | cost_lost_inr | co2e_kg | inr_per_kg |
 |---|---|---|---|---|
@@ -618,7 +619,7 @@ SELECT name,
  LIMIT 15;
 ```
 
-**Result** (15 row(s) in 79 ms - first 8 shown):
+**Result** (15 row(s) in 74 ms - first 8 shown):
 
 | name | occurred_on | kg | expected_kg | z_score |
 |---|---|---|---|---|
@@ -693,7 +694,7 @@ SELECT e.name,
  LIMIT 30;
 ```
 
-**Result** (30 row(s) in 24 ms - first 8 shown):
+**Result** (30 row(s) in 22 ms - first 8 shown):
 
 | name | category_name | kg_per_capita | worst_rank | percentile |
 |---|---|---|---|---|
@@ -741,7 +742,7 @@ SELECT s.depth,
  ORDER BY s.path;
 ```
 
-**Result** (31 row(s) in 19 ms - first 8 shown):
+**Result** (31 row(s) in 12 ms - first 8 shown):
 
 | depth | zone | own_kg | rolled_up_kg |
 |---|---|---|---|
@@ -781,7 +782,7 @@ HAVING COUNT(DISTINCT d.dish_name) >= 3
  LIMIT 12;
 ```
 
-**Result** (11 row(s) in 79 ms - first 8 shown):
+**Result** (11 row(s) in 98 ms - first 8 shown):
 
 | ingredient | wasted_dishes_using_it | wasted_kg_of_those_dishes | avg_qty_per_portion |
 |---|---|---|---|
@@ -822,7 +823,7 @@ HAVING SUM(l.received_qty) > 500
  ORDER BY spoilage_rate_pct DESC;
 ```
 
-**Result** (9 row(s) in 1018 ms - first 8 shown):
+**Result** (9 row(s) in 987 ms - first 8 shown):
 
 | supplier | supplier_type | received_kg | spoiled_kg | spoilage_rate_pct |
 |---|---|---|---|---|
@@ -858,7 +859,7 @@ SELECT ec.kind,
  ORDER BY total_kg DESC;
 ```
 
-**Result** (7 row(s) in 56 ms):
+**Result** (7 row(s) in 47 ms):
 
 | kind | events | total_kg | manual_pct | etl_import_pct | system_pct |
 |---|---|---|---|---|---|
@@ -899,7 +900,7 @@ SELECT sl.listing_id,
  ORDER BY similarity DESC;
 ```
 
-**Result** (5 row(s) in 6 ms):
+**Result** (5 row(s) in 9 ms):
 
 | listing_id | listing | org_name | similarity | daily_capacity_kg |
 |---|---|---|---|---|
@@ -931,13 +932,13 @@ SELECT l.establishment_id, l.food_id,
 RETURNING listing_id, establishment_id, offered_qty_kg, status, expires_at;
 ```
 
-**Result** (3 row(s) in 36 ms - executed in a transaction that was rolled back):
+**Result** (3 row(s) in 38 ms - executed in a transaction that was rolled back):
 
 | listing_id | establishment_id | offered_qty_kg | status | expires_at |
 |---|---|---|---|---|
-| 4443 | 1 | 25.000 | OPEN | 2026-11-01 16:45:00+00:00 |
-| 4444 | 19 | 12.250 | OPEN | 2026-11-02 01:03:00+00:00 |
-| 4445 | 19 | 5.370 | OPEN | 2026-11-02 01:03:00+00:00 |
+| 4449 | 1 | 25.000 | OPEN | 2026-11-01 16:45:00+00:00 |
+| 4450 | 19 | 12.250 | OPEN | 2026-11-02 01:03:00+00:00 |
+| 4451 | 19 | 5.370 | OPEN | 2026-11-02 01:03:00+00:00 |
 
 **Explanation:** Returns the listings that WOULD be created (the transaction is rolled back afterwards). expires_at is the earlier of the lot's expiry and 48 hours.
 
@@ -956,7 +957,7 @@ UPDATE surplus_listing
 RETURNING listing_id, establishment_id, offered_qty_kg, claimed_qty_kg, expires_at, status;
 ```
 
-**Result** (12 row(s) in 7 ms - first 8 shown - executed in a transaction that was rolled back):
+**Result** (12 row(s) in 14 ms - first 8 shown - executed in a transaction that was rolled back):
 
 | listing_id | establishment_id | offered_qty_kg | claimed_qty_kg | expires_at | status |
 |---|---|---|---|---|---|
@@ -985,7 +986,7 @@ DELETE FROM waste_event
 RETURNING waste_id, establishment_id, occurred_on, quantity_kg, source_doc_id, measurement_source;
 ```
 
-**Result** (3 row(s) in 20 ms - executed in a transaction that was rolled back):
+**Result** (3 row(s) in 52 ms - executed in a transaction that was rolled back):
 
 | waste_id | establishment_id | occurred_on | quantity_kg | source_doc_id | measurement_source |
 |---|---|---|---|---|---|
@@ -1012,10 +1013,40 @@ DO UPDATE SET food_id = EXCLUDED.food_id, confidence = EXCLUDED.confidence, meth
 RETURNING alias_id, raw_name_norm, food_id, method, status, hit_count;
 ```
 
-**Result** (1 row(s) in 5 ms - executed in a transaction that was rolled back):
+**Result** (1 row(s) in 10 ms - executed in a transaction that was rolled back):
 
 | alias_id | raw_name_norm | food_id | method | status | hit_count |
 |---|---|---|---|---|---|
-| 48 | panneer masala | 58 | MANUAL | RESOLVED | 1 |
+| 50 | panneer masala | 58 | MANUAL | RESOLVED | 1 |
 
 **Explanation:** A single row: the alias inserted, or updated if it already existed (hit_count 1 on first insert, incremented on conflict).
+
+## Q27 - Forecast accuracy per model (MAE, RMSE, MAPE) on the held-out test days
+
+**DBMS concepts:** JOIN of forecast_run and forecast_eval_daily, scalar subquery for the latest run, AVG / ABS / SQRT aggregates, NULLIF guard
+
+**Purpose in ZoneFood:** The plan's original Query 21 (forecast accuracy per model), now answerable because the forecasting models exist. Compares the seasonal-naive baseline, Ridge and LightGBM on zone-level daily waste for the test window that no model saw during training or tuning.
+
+```sql
+SELECT r.run_id,
+       e.model,
+       COUNT(*)                                                              AS test_days,
+       ROUND(AVG(ABS(e.predicted_kg - e.actual_kg)), 1)                      AS mae_kg,
+       ROUND(SQRT(AVG((e.predicted_kg - e.actual_kg) ^ 2))::numeric, 1)      AS rmse_kg,
+       ROUND(100 * AVG(ABS(e.predicted_kg - e.actual_kg) / NULLIF(e.actual_kg, 0)), 1) AS mape_pct
+  FROM forecast_eval_daily e
+  JOIN forecast_run r ON r.run_id = e.run_id
+ WHERE r.run_id = (SELECT MAX(run_id) FROM forecast_run)
+ GROUP BY r.run_id, e.model
+ ORDER BY mae_kg;
+```
+
+**Result** (3 row(s) in 7 ms):
+
+| run_id | model | test_days | mae_kg | rmse_kg | mape_pct |
+|---|---|---|---|---|---|
+| 2 | ridge | 28 | 241.0 | 291.9 | 11.1 |
+| 2 | lightgbm | 28 | 253.4 | 332.2 | 11.2 |
+| 2 | seasonal_naive | 28 | 336.0 | 418.3 | 15.8 |
+
+**Explanation:** One row per model for the latest forecast run; lower mae_kg / rmse_kg / mape_pct is better. The first row is the best by MAE. The same numbers drive the Forecast page (which ranks by RMSE, so the two orderings can differ when errors are unevenly spread).

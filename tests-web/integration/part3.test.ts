@@ -189,7 +189,7 @@ describe("DBMS Lab API", () => {
     expect(await count("SELECT count(*) AS n FROM zone")).toBeGreaterThan(0);
   });
 
-  it("runs every catalogue query (26) and returns rows; EXPLAIN ANALYZE returns a plan", async () => {
+  it("runs every catalogue query (27) and returns rows; EXPLAIN ANALYZE returns a plan", async () => {
     // let time pass on the disposable database so the housekeeping UPDATE (Q24) has stale listings to move
     await query("ALTER TABLE surplus_listing DISABLE TRIGGER tr_audit_listing");
     await query("UPDATE surplus_listing SET available_from = now() - interval '6 hours', expires_at = now() - interval '1 hour' WHERE status = 'OPEN' AND expires_at > now() AND listing_id % 3 = 0");

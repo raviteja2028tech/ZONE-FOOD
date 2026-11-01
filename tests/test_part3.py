@@ -57,7 +57,7 @@ def remaining(conn, lot_id):
 def test_part3_migrations_are_applied_in_order(seeded_db):
     with psycopg.connect(pg_dsn(seeded_db)) as c:
         names = [r[0] for r in c.execute("SELECT filename FROM schema_migrations ORDER BY version")]
-    assert names[-5:] == ["014_alter_drop_ddl.sql", "015_views.sql", "016_functions_procedures.sql", "017_triggers.sql", "018_lot_lookup_index.sql"]
+    assert names[-6:] == ["014_alter_drop_ddl.sql", "015_views.sql", "016_functions_procedures.sql", "017_triggers.sql", "018_lot_lookup_index.sql", "019_forecasting.sql"]
     assert migrate.run_up(seeded_db) == 0
 
 

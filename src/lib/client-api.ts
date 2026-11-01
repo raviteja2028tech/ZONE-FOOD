@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { startTransition, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -50,7 +50,9 @@ export function useSubmit<T = unknown>(opts: {
       if (result.ok) {
         if (success) toast.success(success);
         onSuccess?.(result.data);
-        if (refresh) router.refresh();
+        // A refresh suspends while the server re-renders; run it as a transition so React never treats it as an urgent
+        // update of a component (for example a modal form) that has just been unmounted by onSuccess.
+        if (refresh) startTransition(() => router.refresh());
         return result;
       }
       const details = result.error.details;

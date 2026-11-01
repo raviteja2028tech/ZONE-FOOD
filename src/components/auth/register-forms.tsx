@@ -2,7 +2,7 @@
 
 import { Building2, HandHeart } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 import { useSubmit, num, str } from "@/lib/client-api";
 import { cn } from "@/lib/cn";
 import { Checkbox, Field, FormError, FormGrid, Input, Select, Textarea } from "@/components/ui/fields";
@@ -40,7 +40,7 @@ function EstablishmentForm({ categories, zones }: { categories: Category[]; zone
   const router = useRouter();
   const [categoryId, setCategoryId] = useState("");
   const cat = categories.find((c) => String(c.id) === categoryId);
-  const { submit, pending, error, fields } = useSubmit({ url: "/api/auth/register/establishment", refresh: false, onSuccess: () => { router.replace("/"); router.refresh(); } });
+  const { submit, pending, error, fields } = useSubmit({ url: "/api/auth/register/establishment", refresh: false, onSuccess: () => startTransition(() => { router.replace("/"); router.refresh(); }) });
   const f = flat(fields);
   const kind = cat ? profileKind(cat.kind) : null;
 
@@ -132,7 +132,7 @@ function EstablishmentForm({ categories, zones }: { categories: Category[]; zone
 
 function RecipientForm({ zones }: { zones: ZoneOpt[] }) {
   const router = useRouter();
-  const { submit, pending, error, fields } = useSubmit({ url: "/api/auth/register/recipient", refresh: false, onSuccess: () => { router.replace("/"); router.refresh(); } });
+  const { submit, pending, error, fields } = useSubmit({ url: "/api/auth/register/recipient", refresh: false, onSuccess: () => startTransition(() => { router.replace("/"); router.refresh(); }) });
   const f = flat(fields);
   return (
     <form

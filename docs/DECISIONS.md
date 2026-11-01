@@ -96,3 +96,13 @@ _Q1 (Next.js 16) approved. Q2 (git) still open - nothing committed._
 46. **`idx_waste_lot` (migration 018)** was added because EXPLAIN showed Q20 scanning `waste_event` once per lot (30 s timeout); with the partial index it runs in under a second. Performance work is driven by plans, not guesses.
 47. **Charts always have a table alternative**, a legend for 2+ series, fixed categorical slots, anomaly markers from SQL (z-score) rather than client-side statistics. Insight numbers come from `lib/db/repositories/insights.ts`, which runs the same SQL as the catalogue (an integration test asserts equality).
 48. **Git:** the repository root remains the home directory of the user (branch `mai`, one commit). Nothing was initialised, committed or pushed; the per-member commit history in Req. 15 needs your decision.
+
+## Forecasting and final-round decisions
+
+49. **Forecasting is trained offline and stored.** `scripts/forecast.py` writes the run to PostgreSQL (migration 019) and the page only reads it, so every dashboard number is traceable to a run and the web server needs no ML runtime. Cost: the page shows the last run; staleness is visible (training time and data window are on the page).
+50. **Target: next-day waste per establishment (panel of 56 series), reported at kitchen and zone level.** Daily zone totals alone give ~125 points, too few for LightGBM; the panel gives ~3.7k training rows. The "best model" is chosen by zone-level RMSE, a rule fixed before looking at results; the page also states that LightGBM wins per kitchen.
+51. **Leakage control is tested, not asserted**: a test overwrites future values and checks that no earlier feature changes; windows are chronological; hyper-parameters chosen on validation only; incomplete last days are excluded.
+52. **Plan query 21 is now real (Q27).** The earlier substitution (Q21 provenance) is kept as an extra report.
+53. **Isolated clones.** Compose container names derive from `COMPOSE_PROJECT_NAME` (default `zonefood`), so a second copy can run beside the first with its own volumes and ports.
+54. **Navigation transitions** (`startTransition` around `router.replace/refresh`) were added after a one-off React message about `use()` in the dev log; the message was not reproducible, so this is hardening, not a verified fix.
+

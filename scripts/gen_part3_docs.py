@@ -49,7 +49,7 @@ def md_table(columns: list[str], rows: list[tuple], width: int = 46) -> str:
 
 # ---------------------------------------------------------------------------------------------- catalogue
 COVERAGE = [
-    ("SELECT", "Q01-Q22"), ("INSERT (… SELECT, RETURNING)", "Q23"), ("INSERT … ON CONFLICT (upsert)", "Q26"),
+    ("SELECT", "Q01-Q22, Q27"), ("INSERT (… SELECT, RETURNING)", "Q23"), ("INSERT … ON CONFLICT (upsert)", "Q26"),
     ("UPDATE", "Q24"), ("DELETE", "Q25"),
     ("INNER JOIN, multi-table (4–7 tables)", "Q01, Q03, Q10, Q12, Q17, Q19, Q20"), ("LEFT JOIN", "Q08, Q10, Q16, Q18, Q20"),
     ("GROUP BY / HAVING", "Q01, Q03, Q05, Q06, Q19, Q20"), ("Aggregates (SUM, AVG, COUNT, CORR, PERCENTILE_CONT, STDDEV_SAMP)", "Q01, Q06, Q12, Q15"),
@@ -70,8 +70,8 @@ def gen_catalogue(dbname: str | None) -> str:
         f"_Generated {STAMP} by `python scripts/gen_part3_docs.py` - every query below was **executed** against the live "
         f"PostgreSQL database and the output shown is what it returned. Source: `db/queries/Qnn_*.sql`._",
         "",
-        f"**{len(results) - len(bad)} of {len(results)} queries executed and returned rows.** The PDF asks for 22; ZoneFood has 26: the 22 analytical queries "
-        "(PDF query 21, forecast accuracy, needs the Part 4 forecasting tables, so Q21 is a data-provenance report instead) plus four data-manipulation "
+        f"**{len(results) - len(bad)} of {len(results)} queries executed and returned rows.** The PDF asks for 22; ZoneFood has 27: 23 analytical queries "
+        "(Q21 is a data-provenance report; the PDF's forecast-accuracy query is Q27, which reads the stored forecast run) plus four data-manipulation "
         "statements (Q23-Q26). DML queries are always run inside a transaction that is **rolled back**, so running the catalogue never changes your data.",
         "",
         "Run one yourself: `python scripts/catalogue.py Q03` · all: `python scripts/catalogue.py` · or in the app: **DBMS Lab** page (zone admin / auditor).",

@@ -1,12 +1,12 @@
 # Test report
 
-_Generated 2026-11-01 18:32 by `python scripts/run_all_tests.py`. Every figure below was produced by running the suites in this repository; the per-test lists are parsed from their machine-readable reports (`reports/`)._
+_Generated 2026-11-01 19:33 by `python scripts/run_all_tests.py`. Every figure below was produced by running the suites in this repository; the per-test lists are parsed from their machine-readable reports (`reports/`)._
 
-**Overall: ALL SUITES PASSED - 245 of 245 automated tests passed**, plus type-check, lint and a production build.
+**Overall: ALL SUITES PASSED - 257 of 257 automated tests passed**, plus type-check, lint and a production build.
 
 ## Environment
 
-- PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2); migrations applied: 18; MongoDB 7 (Docker); pgvector 0.8
+- PostgreSQL 16.15 (Debian 16.15-1.pgdg12+2); migrations applied: 19; MongoDB 7 (Docker); pgvector 0.8
 - Node v24.18.0, Python 3.14.6, Windows 11
 - Integration tests run against a **disposable database** (`zonefood_webtest`) built from the real migrations and seed; pytest uses its own throw-away databases. The working database is never touched by the suites.
 
@@ -14,12 +14,12 @@ _Generated 2026-11-01 18:32 by `python scripts/run_all_tests.py`. Every figure b
 
 | Suite | Command | Passed | Failed | Time | Result |
 |---|---|---|---|---|---|
-| Database layer (pytest) | `python -m pytest -q` | 120/120 | 0 | 45s | PASS |
-| TypeScript type-check | `npm run typecheck` | clean | - | 7s | PASS |
-| ESLint | `npm run lint` | clean | - | 20s | PASS |
-| Unit tests (vitest) | `npm test` | 46/46 | 0 | 5s | PASS |
-| Integration tests (vitest, disposable DB) | `npm run test:integration` | 79/79 | 0 | 80s | PASS |
-| Production build (Next.js) | `npm run build` | 68 routes compiled | - | 20s | PASS |
+| Database layer (pytest) | `python -m pytest -q` | 128/128 | 0 | 58s | PASS |
+| TypeScript type-check | `npm run typecheck` | clean | - | 6s | PASS |
+| ESLint | `npm run lint` | clean | - | 22s | PASS |
+| Unit tests (vitest) | `npm test` | 46/46 | 0 | 9s | PASS |
+| Integration tests (vitest, disposable DB) | `npm run test:integration` | 83/83 | 0 | 116s | PASS |
+| Production build (Next.js) | `npm run build` | 70 routes compiled | - | 22s | PASS |
 
 ## How to reproduce
 
@@ -48,7 +48,7 @@ npm run build
 
 ### Database layer (pytest)
 
-<details><summary><code>test_catalogue</code> - 48/48 passed</summary>
+<details><summary><code>test_catalogue</code> - 50/50 passed</summary>
 
 - ✅ test_the_catalogue_has_at_least_22_queries_with_complete_documentation
 - ✅ test_query_executes_and_returns_rows[Q01]
@@ -77,6 +77,7 @@ npm run build
 - ✅ test_query_executes_and_returns_rows[Q24]
 - ✅ test_query_executes_and_returns_rows[Q25]
 - ✅ test_query_executes_and_returns_rows[Q26]
+- ✅ test_query_executes_and_returns_rows[Q27]
 - ✅ test_dml_queries_leave_the_data_untouched
 - ✅ test_catalogue_covers_the_required_sql_features
 - ✅ test_q01_rows_are_per_block_and_kind_and_non_negative
@@ -98,6 +99,7 @@ npm run build
 - ✅ test_q21_provenance_percentages_add_up
 - ✅ test_q22_returns_at_most_five_feasible_recipients_best_first
 - ✅ test_dml_queries_return_what_they_claim
+- ✅ test_q27_forecast_accuracy_matches_the_stored_run
 
 </details>
 
@@ -107,6 +109,17 @@ npm run build
 - ✅ test_transaction_demo_shows_deduction_savepoint_and_full_rollback
 - ✅ test_every_demo_script_is_present_and_documented[01_ddl_lifecycle.sql]
 - ✅ test_every_demo_script_is_present_and_documented[02_transactions_and_rollback.sql]
+
+</details>
+
+<details><summary><code>test_forecast</code> - 6/6 passed</summary>
+
+- ✅ test_features_never_see_the_row_they_predict
+- ✅ test_future_row_is_added_and_has_no_label
+- ✅ test_split_is_chronological_and_disjoint
+- ✅ test_metrics_are_zero_for_a_perfect_forecast_and_positive_otherwise
+- ✅ test_partial_last_day_is_not_used_for_training
+- ✅ test_run_on_seeded_database_stores_a_consistent_honest_run
 
 </details>
 
@@ -316,6 +329,15 @@ npm run build
 
 </details>
 
+<details><summary><code>forecast.test.ts</code> - 4/4 passed</summary>
+
+- ✅ forecast API and data requires a session and the forecast:view permission
+- ✅ forecast API and data zone roles receive the real run: three models, chronological windows, evaluation for every test day
+- ✅ forecast API and data actual values in the evaluation series equal the real waste totals in the database
+- ✅ forecast API and data an establishment sees only its own forecast, never zone evaluation or other kitchens
+
+</details>
+
 <details><summary><code>part3.test.ts</code> - 20/20 passed</summary>
 
 - ✅ stock consistency: deducted exactly once, from every path an API write-off deducts the lot once (not twice: the application no longer deducts, the trigger does)
@@ -328,7 +350,7 @@ npm run build
 - ✅ closing a session through the stored procedure records consumption, creates plate-waste events and an auto surplus listing, atomically
 - ✅ audit trail attributes changes to the signed-in user creating and cancelling a listing through the API writes audit rows with the manager's id
 - ✅ DBMS Lab API only zone admins and auditors may use it; unknown ids and raw SQL are rejected
-- ✅ DBMS Lab API runs every catalogue query (26) and returns rows; EXPLAIN ANALYZE returns a plan
+- ✅ DBMS Lab API runs every catalogue query (27) and returns rows; EXPLAIN ANALYZE returns a plan
 - ✅ DBMS Lab API DML queries leave the data untouched (they are rolled back)
 - ✅ DBMS Lab API every live demonstration behaves as documented and rolls back
 - ✅ DBMS Lab API only a zone admin can refresh the materialised view; the refresh makes it current

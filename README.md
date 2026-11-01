@@ -11,7 +11,7 @@ reach someone who needs it* become database queries.
 > locality, or food-safety record.
 
 **Project status:** Parts 1-3 are built and verified (database, application, advanced DBMS features, analytics UI, tests,
-submission documents); Part 4 (optional) is not started. See [CURRENT_STATUS.md](CURRENT_STATUS.md) for the authoritative, test-backed status.
+submission documents), and the forecasting extension (Part 4, requested explicitly) is implemented with real models on the real history. See [CURRENT_STATUS.md](CURRENT_STATUS.md) for the authoritative, test-backed status.
 
 ## Why three database technologies
 
@@ -73,8 +73,9 @@ PostgreSQL via raw parameterised SQL (`pg`); MongoDB via the official driver; no
 
 ```powershell
 docker compose up -d --wait         # PostgreSQL 16 + pgvector, MongoDB 7
-python scripts/setup_db.py          # migrations 001-018 + seed (add --reset for a clean rebuild)
+python scripts/setup_db.py          # migrations 001-019 + seed (add --reset for a clean rebuild)
 npm install
+python scripts/forecast.py          # train + store the forecasting models (Forecast page)
 npm run demo:prepare                # embeddings + live synthetic listings (first run downloads a ~23 MB model into .cache/)
 npm run dev                         # http://localhost:3000
 npm run build ; npm start           # production
@@ -134,6 +135,10 @@ All of this runs on the real database and is demonstrable from the **DBMS Lab** 
 
 New screens: **Analytics** (`/analytics`: anomaly-marked trend, weekday profile, diversion rate, peer ranking, rescue funnel, supplier spoilage, data provenance - each chart has a table view), **DBMS Lab** (`/lab`: run any catalogue query, EXPLAIN ANALYZE it, run 12 live constraint demonstrations that are rolled back, browse every database object, refresh the materialised view), **Audit log** (`/audit`), and a command palette (Ctrl+K).
 
+## Waste forecasting
+
+`python scripts/forecast.py` trains three models on the recorded history (seasonal naive baseline, Ridge regression, LightGBM) with a chronological train / validation / test split and leak-free features, scores them (MAE, RMSE, WAPE at kitchen and zone level), stores the run in PostgreSQL (migration 019) and the **Forecast** page shows actual-vs-predicted, the model comparison, feature importance and tomorrow's expected waste per establishment. Method, results and limitations (synthetic data, 28-day test window): [docs/FORECASTING.md](docs/FORECASTING.md).
+
 ## Testing
 
 ```powershell
@@ -150,6 +155,9 @@ Results: [docs/TEST_REPORT.md](docs/TEST_REPORT.md). The working database is nev
 
 | Document | Content |
 |---|---|
+| [IMPLEMENTATION.md](IMPLEMENTATION.md) | everything that is implemented, with evidence |
+| [FRIEND_SETUP_GUIDE.md](FRIEND_SETUP_GUIDE.md) | exact clone-to-run instructions |
+| [docs/FORECASTING.md](docs/FORECASTING.md) | forecasting method, leakage prevention, results, limitations |
 | [docs/PROJECT_REPORT.md](docs/PROJECT_REPORT.md) | overview of the whole submission |
 | [docs/ER_DIAGRAM.md](docs/ER_DIAGRAM.md) · [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md) | generated from the live catalog |
 | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) · [docs/MONGODB_DESIGN.md](docs/MONGODB_DESIGN.md) | PostgreSQL and MongoDB design, normalisation |
@@ -176,7 +184,7 @@ Git is initialised **inside this project folder** (not in any parent directory).
 ```
 docker-compose.yml        PostgreSQL 16 + pgvector, MongoDB 7 (volumes, health checks)
 .env.example              configuration template (copy to .env; .env is git-ignored)
-db/migrations/            numbered, checksummed SQL migrations 001-018  (the schema's source of truth)
+db/migrations/            numbered, checksummed SQL migrations 001-019  (the schema's source of truth)
 db/queries/               Q01-Q26 catalogue queries (one file each: title, concepts, purpose, SQL)
 db/demos/                 safe DDL / transaction / race demonstrations (always rolled back)
 src/                      Next.js app: app/ (pages + 41 API routes), components/, lib/{auth,db,domain,embeddings,env,http,log,validation}, proxy.ts
@@ -198,4 +206,4 @@ ZoneFood_Master_Plan.pdf  project specification        ZoneFood_WORKFLOW.md  bui
 | 2 | Next.js application, auth/roles, lifecycle workflows, MongoDB integration + ETL, embeddings | Done & verified (approved) |
 | 3 | Query catalogue, advanced DBMS features, dashboard UI, testing, submission package | Done & verified (approved) |
 | 5 | Final audit, premium UI layer, Git set-up, fresh-clone verification | **Done; open items (team details, GitHub remote) listed in CURRENT_STATUS.md** |
-| 4 | Forecasting / research extensions | Optional - never started without explicit approval |
+| 4 | Forecasting (requested explicitly) | Done: Seasonal naive vs Ridge vs LightGBM, stored runs, `/forecast` dashboard. Further research extensions: not started |

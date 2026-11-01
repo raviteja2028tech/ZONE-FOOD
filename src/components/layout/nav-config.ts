@@ -1,5 +1,5 @@
 import {
-  Activity, BarChart3, Building2, ClipboardCheck, Database, FlaskConical, History, FileText, Gift, HandHeart, Handshake, LayoutDashboard, Map as MapIcon, Package, Salad, ScanSearch,
+  Activity, BarChart3, TrendingUp, Building2, ClipboardCheck, Database, FlaskConical, History, FileText, Gift, HandHeart, Handshake, LayoutDashboard, Map as MapIcon, Package, Salad, ScanSearch,
   Store, Trash2, Truck, Utensils, type LucideIcon,
 } from "lucide-react";
 import { can, type Permission, type Role } from "@/lib/auth/permissions";
@@ -26,6 +26,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Overview", icon: LayoutDashboard, permission: "dashboard:view", href: () => "/", group: "Overview" },
 
   { label: "Analytics", icon: BarChart3, permission: "analytics:view", href: () => "/analytics", group: "Overview" },
+  { label: "Forecast", icon: TrendingUp, permission: "forecast:view", href: () => "/forecast", group: "Overview" },
 
   { label: "Establishments", icon: Building2, permission: "establishment:list", href: () => "/establishments", group: "Locality" },
   { label: "Recipients", icon: HandHeart, permission: "recipient:list", href: () => "/recipients", group: "Locality" },

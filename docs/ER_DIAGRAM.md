@@ -128,6 +128,50 @@ erDiagram
     vector name_embedding
     tsvector search_doc
   }
+  forecast_eval_daily {
+    integer run_id PK,FK
+    date eval_date PK
+    varchar model PK
+    numeric actual_kg
+    numeric predicted_kg
+  }
+  forecast_importance {
+    integer run_id PK,FK
+    varchar model PK
+    varchar feature PK
+    numeric importance
+  }
+  forecast_prediction {
+    integer run_id PK,FK
+    integer establishment_id PK,FK
+    date target_date PK
+    varchar model PK
+    numeric predicted_kg
+  }
+  forecast_run {
+    integer run_id PK
+    timestamptz created_at
+    varchar target
+    smallint horizon_days
+    date history_from
+    date history_to
+    date train_from
+    date train_to
+    date val_from
+    date val_to
+    date test_from
+    date test_to
+    integer n_series
+    integer n_train
+    integer n_val
+    integer n_test
+    text features
+    varchar best_model
+    jsonb metrics
+    jsonb params
+    jsonb library_versions
+    text notes
+  }
   institutional_profile {
     integer establishment_id PK,FK
     integer enrolled_strength
@@ -297,6 +341,10 @@ erDiagram
   app_user |o--o{ etl_run_log : "triggered_by"
   food_item |o--o{ food_alias : "food_id"
   food_category ||--o{ food_item : "food_category_id"
+  forecast_run ||--o{ forecast_eval_daily : "run_id"
+  forecast_run ||--o{ forecast_importance : "run_id"
+  establishment ||--o{ forecast_prediction : "establishment_id"
+  forecast_run ||--o{ forecast_prediction : "run_id"
   establishment ||--o| institutional_profile : "establishment_id"
   establishment ||--o{ inventory_lot : "establishment_id"
   food_item ||--o{ inventory_lot : "food_id"

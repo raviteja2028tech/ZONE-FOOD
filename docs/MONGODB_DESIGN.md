@@ -1,6 +1,6 @@
 # MongoDB design
 
-_Generated 2026-11-01 17:24 from the live database `zonefood` (MongoDB 7.0.45) - the example documents below are real rows, not invented samples._
+_Generated 2026-11-01 19:29 from the live database `zonefood` (MongoDB 7.0.45) - the example documents below are real rows, not invented samples._
 
 ## Why MongoDB here, and why not for everything
 
@@ -12,7 +12,7 @@ PostgreSQL is the **system of record** for everything relational: establishments
 | `inspection_reports` | ordinary + validator | 28 | Checklist sections and items change between audit rounds (template v1 vs v2) and may carry readings, notes or photos. |
 | `bin_readings` | time-series | 1008 | High-frequency sensor-style readings; native time-series storage and compression. |
 | `establishment_meta` | ordinary, unique index | 56 | Arbitrary per-kind attributes that do not deserve columns. |
-| `activity_stream` | capped (5 MB / 5000 docs) | 342 | Append-only application events (login, claim, listing...); the capped collection discards the oldest automatically. |
+| `activity_stream` | capped (5 MB / 5000 docs) | 375 | Append-only application events (login, claim, listing...); the capped collection discards the oldest automatically. |
 
 ## Source of truth and synchronisation
 
@@ -244,9 +244,9 @@ PostgreSQL is the **system of record** for everything relational: establishments
 
 ```json
 {
-  "_id": "6ae7253f7cf1186617ae04e8",
-  "user_id": 1,
-  "ts": "2026-11-01 11:40:47.662000",
+  "_id": "6ae744dcc1ab8f3c4a87afba",
+  "user_id": 2,
+  "ts": "2026-11-01 13:55:40.729000",
   "event": "LOGIN",
   "details": {}
 }

@@ -22,6 +22,7 @@ EXPECTED_TABLES = [
     "supplier", "procurement", "procurement_line", "inventory_lot", "dish", "dish_ingredient", "service_session",
     "preparation_batch", "consumption_record", "waste_reason", "disposal_route", "waste_event", "surplus_listing",
     "redistribution_claim", "locality_event", "zone_event", "audit_log", "schema_migrations", "food_alias", "etl_run_log",
+    "forecast_run", "forecast_eval_daily", "forecast_prediction", "forecast_importance",
 ]
 MIN_ROWS = {"zone": 31, "establishment": 50, "app_user": 50, "food_item": 50, "dish": 100, "service_session": 1000,
             "preparation_batch": 1000, "consumption_record": 1000, "procurement": 500, "inventory_lot": 500,

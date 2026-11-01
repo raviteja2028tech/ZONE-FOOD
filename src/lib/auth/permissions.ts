@@ -59,6 +59,8 @@ export const PERMISSIONS = {
   // the audit trail, and refreshing the materialised view.
   "analytics:view": [...ESTAB, ...AUTHORITY],
   "lab:use": AUTHORITY,
+  // Part 4 (requested): forecasting dashboard. Authority sees the zone; establishments see only their own forecast.
+  "forecast:view": [...ESTAB, ...AUTHORITY],
   "lab:refresh": ["ZONE_ADMIN"],
   "audit:read": AUTHORITY,
   "matching:use": [...ESTAB, ...AUTHORITY],

@@ -150,10 +150,11 @@ def main() -> None:
         "| Suite | Covers |", "|---|---|",
         "| pytest `test_part1.py` | migrations from empty, idempotent re-run, checksum tamper rejection, constraints (PK/FK/UNIQUE/CHECK), triggers T1/T2, partition pruning, seed determinism, MongoDB shapes/validators/indexes, docs match schema |",
         "| pytest `test_part3.py` | ALTER/DROP DDL, views, materialised view refresh, stored functions/procedure, triggers T3-T6, stock consistency, transactions & rollback, partition function, **real multi-connection concurrency** |",
-        "| pytest `test_catalogue.py` | all 26 catalogue queries execute on a clean seeded database and their results are semantically correct; DML leaves data untouched |",
+        "| pytest `test_catalogue.py` | all 27 catalogue queries execute on a clean seeded database and their results are semantically correct; DML leaves data untouched |",
+        "| pytest `test_forecast.py` | forecasting: features never see the day they predict (future values overwritten), chronological non-overlapping windows, metric maths, partial last day excluded, a full run on the seeded database stores a consistent run whose actuals equal the real waste totals |",
         "| pytest `test_demos.py` | the safe DDL/transaction demonstration scripts run and leave no trace |",
         "| vitest unit | permission matrix, claim state machine, scoring maths, name-matching policy, ETL adapters, rate limiter, validation schemas, env |",
-        "| vitest integration | authentication, sessions, RBAC (403/404), registration atomicity, every lifecycle workflow, API validation, concurrency (claims, approvals, write-offs), session-close procedure, audit attribution, DBMS Lab API (all queries + demos), MongoDB submissions, ETL idempotency/retry/lease, pgvector name matching, analytics = catalogue, dashboard correctness |", "",
+        "| vitest integration | authentication, sessions, RBAC (403/404), registration atomicity, every lifecycle workflow, API validation, concurrency (claims, approvals, write-offs), session-close procedure, audit attribution, DBMS Lab API (all queries + demos), MongoDB submissions, ETL idempotency/retry/lease, pgvector name matching, analytics = catalogue, dashboard correctness, forecast API (zone view vs own-establishment view) |", "",
         "## Detailed results", "",
     ]
     for r in results:

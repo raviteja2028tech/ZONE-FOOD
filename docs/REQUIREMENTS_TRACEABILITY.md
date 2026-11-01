@@ -80,10 +80,10 @@ Status legend: **Verified** = implemented and a command/test proves it · Pendin
 | 7 | Day-of-week profile | Q07 | 18 | Recursive zone roll-up | Q18 |
 | 8 | Event vs non-event days | Q08 | 19 | Ingredient exposure | Q19 |
 | 9 | Expiring lots by value | Q09 | 20 | Supplier spoilage | Q20 |
-| 10 | Rescue funnel | Q10 | 21 | Forecast accuracy (MAE/MAPE) | **Q21 replaced** (D1) |
+| 10 | Rescue funnel | Q10 | 21 | Forecast accuracy (MAE/MAPE) | **Q27** (real, reads the stored forecast run); Q21 is an extra provenance report (D1) |
 | 11 | Unmet recipient capacity | Q11 | 22 | Semantic top-5 recipients | Q22 |
 
-Plus Q23 INSERT...SELECT, Q24 UPDATE, Q25 DELETE with subquery, Q26 UPSERT - the DML the course requires beyond SELECT.
+Plus Q23 INSERT...SELECT, Q24 UPDATE, Q25 DELETE with subquery, Q26 UPSERT - the DML the course requires beyond SELECT. The catalogue has 27 queries.
 
 ## Course requirements Req. 1-18 (plan §14)
 
@@ -114,13 +114,23 @@ The original course-requirements PDF is not in the repository (DECISIONS Q3); Re
 
 | # | Plan said | Done | Reason |
 |---|---|---|---|
-| D1 | Query 21 = forecast accuracy (MAE/MAPE) | Q21 = **data provenance by kind** | the forecasting layer is Part 4 (optional, not started); provenance uses the ALTER column and is real. A forecast query on empty tables would be fake |
+| D1 | Query 21 = forecast accuracy (MAE/MAPE) | Originally replaced by data provenance (Q21) because forecasting was out of scope; **now resolved**: the forecasting extension exists and Q27 answers the plan's query 21 from the stored run (Q21 remains as an additional report) | closed by the forecasting work |
 | D2 | ALTER adds `residential_profile.segregation_compliant`; DROP an unused column | ALTER adds `waste_event.measurement_source`; DROP `idx_wastenote_vec` | the suggested column feeds no feature; the provenance column drives Q21 and the Analytics page. The dropped object is a genuinely unused index (its column is NULL everywhere) |
 | D3 | `tr_lot_deduct` trigger | `tr_lot_ledger` (BEFORE insert/update/delete) | a plain AFTER-INSERT trigger deadlocked under concurrency; BEFORE plus restore-on-change/delete is stronger |
 | D4 | Materialised view counts all waste | `mv_zone_monthly` excludes `REDISTRIBUTED` | redistributed food is not waste; all views and queries agree |
 | D5 | pgvector "similar past incidents" on waste notes | not built; its index dropped | no feature uses it; documented as a limitation |
 | D6 | 400k waste rows | ~55k seeded rows | enough for plan-shape evidence on a laptop; stated in EXPLAIN_EVIDENCE.md |
 
-## Excluded (Part 4 / optional — never started without approval)
+## Part 4 - forecasting (requested explicitly after Part 3 approval)
 
-Forecasting layer (§11, tables I-group) · Part C Tier T4 (food state, shelf life, traceability, interventions) · `user_session`, cluster tables.
+| ID | Requirement | Implemented in | Verified by | Status |
+|---|---|---|---|---|
+| P4.1 | Forecasting from real history: seasonal naive vs Ridge vs LightGBM, calendar and history features | `scripts/forecast.py`, migration 019 | `tests/test_forecast.py` (6), real run on 150 days | Verified |
+| P4.2 | Chronological split, leakage prevention | `forecast.py` (shifted features, train < val < test) | leakage test mutates future values and asserts no earlier feature moves | Verified |
+| P4.3 | MAE / RMSE comparison, actual vs predicted visualisation, forecasting dashboard | `/forecast`, `/api/forecast`, `forecast-charts.tsx` | `forecast.test.ts` (4), browser QA, screenshots `p6-*` | Verified |
+| P4.4 | Plan query 21 (forecast accuracy) | `db/queries/Q27_*.sql` | `test_catalogue.py::test_q27_*` | Verified |
+| P4.5 | Honest limitations (synthetic data, 28-day test) | `docs/FORECASTING.md`, on-page note | review | Verified |
+
+## Still not built (never started)
+
+Part C tier T4 (food state, shelf life, traceability, interventions), `user_session`, cluster tables, similar-incident search over waste notes, multi-day forecasts.
