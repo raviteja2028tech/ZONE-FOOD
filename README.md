@@ -1,209 +1,1042 @@
-# ZoneFood — Locality-Scale Food Resource & Waste Intelligence System
 
-A DBMS mini-project (PES University, DBMS Level 3). ZoneFood tracks food across a whole urban zone —
-procurement → inventory → preparation → service → waste → surplus redistribution — for heterogeneous
-establishments (restaurants, college messes, hostels, hospitals, offices, supermarkets, clubs and
-residential blocks), so zone-level questions such as *where is food wasted, why, and could the surplus
-reach someone who needs it* become database queries.
+# ZoneFood
+### Locality-Scale Food Resource & Waste Intelligence System
 
-> **All data in this repository is synthetic.** Names, people, suppliers, NGOs, quantities and
-> emission factors are invented for demonstration. Nothing here describes a real business, institution,
-> locality, or food-safety record.
+<p align="center">
+  <strong>A database-driven platform for food lifecycle tracking, waste analytics, surplus redistribution and forecasting.</strong>
+</p>
 
-**Project status:** Parts 1-3 are built and verified (database, application, advanced DBMS features, analytics UI, tests,
-submission documents), and the forecasting extension (Part 4, requested explicitly) is implemented with real models on the real history. See [CURRENT_STATUS.md](CURRENT_STATUS.md) for the authoritative, test-backed status.
+<p align="center">
+  <img src="https://img.shields.io/badge/Project-DBMS%20Mini%20Project-blue" />
+  <img src="https://img.shields.io/badge/Database-PostgreSQL%2016-336791" />
+  <img src="https://img.shields.io/badge/MongoDB-7.x-47A248" />
+  <img src="https://img.shields.io/badge/Frontend-Next.js%2016-black" />
+  <img src="https://img.shields.io/badge/Forecasting-LightGBM-orange" />
+</p>
 
-## Why three database technologies
+---
 
-| Store | Holds | Why |
-|---|---|---|
-| **PostgreSQL 16** (system of record) | entities, the food lifecycle, quantities, claims | Quantities must balance (`prepared ≥ served + leftover`, `claimed ≤ offered`): declarative CHECKs, foreign keys, triggers and ACID transactions. Hosts the vector columns too. |
-| **MongoDB 7** | raw field submissions, inspection reports, bin sensor readings, flexible metadata | Different establishment types log differently shaped data (per-dish plate waste vs household bin weights vs SKU markdowns). Relationally that is 40 nullable columns or an EAV anti-pattern. |
-| **pgvector** (inside PostgreSQL) | `vector(384)` columns + HNSW indexes | Semantic matching of surplus to recipients and food-name normalisation. |
+## Table of Contents
 
-Details: [docs/DATA_MODEL.md](docs/DATA_MODEL.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/DECISIONS.md](docs/DECISIONS.md)
+- [Overview](#overview)
+- [Problem Statement](#problem-statement)
+- [Objectives](#objectives)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Technology Stack](#technology-stack)
+- [Database Design](#database-design)
+- [Application Modules](#application-modules)
+- [Advanced DBMS Implementation](#advanced-dbms-implementation)
+- [Waste Forecasting](#waste-forecasting)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Configuration](#environment-configuration)
+- [Running the Application](#running-the-application)
+- [Demo Accounts](#demo-accounts)
+- [Testing](#testing)
+- [Security](#security)
+- [Documentation](#documentation)
+- [Dataset](#dataset)
+- [Team](#team)
+- [Academic Context](#academic-context)
 
-## Quick start
+---
 
-Prerequisites: Docker Desktop (running), Python 3.11+.
+## Overview
 
-```powershell
-# 1. configuration (the real .env is git-ignored; edit the placeholder passwords)
-Copy-Item .env.example .env
+**ZoneFood** is a locality-scale food resource and waste intelligence system developed as a Database Management Systems (DBMS) mini-project.
 
-# 2. Python environment for the database scripts
-python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements.txt          # Linux/macOS: .venv/bin/python
+The platform tracks food across its complete lifecycle:
 
-# 3. start PostgreSQL 16 (+pgvector) and MongoDB 7 and wait until healthy
-docker compose up -d --wait
+**Procurement → Inventory → Preparation → Service → Waste → Surplus → Redistribution**
 
-# 4. create schema, seed synthetic data, verify  (add --reset to wipe and rebuild)
-.\.venv\Scripts\python scripts\setup_db.py
+It brings together different types of establishments, including:
+
+- Restaurants
+- College messes and canteens
+- Hostels
+- Hospitals
+- Offices
+- Supermarkets
+- Clubs
+- Residential communities
+
+Instead of treating food waste as an isolated establishment-level problem, ZoneFood provides a connected database system that supports locality-wide analysis.
+
+It helps answer important questions:
+
+- Where is the maximum food waste occurring?
+- Which establishments consistently generate excess waste?
+- Which suppliers are associated with higher spoilage?
+- How does waste change across weekdays and seasons?
+- How much surplus food can potentially be redistributed?
+- Which recipients are suitable for available surplus?
+- How much food waste can be expected in the coming days?
+
+The project combines relational database management, document-oriented storage, vector similarity search, full-stack application development, analytical SQL and machine-learning-based forecasting.
+
+> **Data Disclaimer:** All records in this repository are synthetic and created exclusively for academic demonstration. Names, people, suppliers, organisations, quantities and emission factors are fictional. No real business, institution, locality or food-safety record is represented.
+
+---
+
+## Problem Statement
+
+Food procurement, inventory, preparation, consumption and waste records are often maintained separately across different establishments.
+
+This fragmentation creates several problems:
+
+- Lack of centralised food lifecycle tracking.
+- Difficulty maintaining consistency between inventory, preparation and consumption.
+- Limited visibility into recurring food waste patterns.
+- Difficulty identifying surplus redistribution opportunities.
+- Inability to perform locality-wide analytical comparisons.
+- Lack of historical forecasting for better preparation and inventory planning.
+
+ZoneFood addresses these challenges through an integrated database-backed platform that connects operational records and transforms them into actionable analytical information.
+
+---
+
+## Objectives
+
+1. Design a structured relational database for food lifecycle management.
+2. Integrate PostgreSQL and MongoDB for different data requirements.
+3. Implement database constraints, triggers, procedures and transactions.
+4. Develop role-based authentication and application workflows.
+5. Enable food waste analytics at establishment and locality levels.
+6. Implement surplus-to-recipient matching using semantic similarity.
+7. Demonstrate advanced SQL concepts and query optimisation.
+8. Compare forecasting models using chronological validation.
+9. Provide reproducible setup, database migrations and automated testing.
+
+---
+
+## Key Features
+
+### 1. Complete Food Lifecycle Management
+
+- Procurement and supplier tracking.
+- Inventory lot management.
+- Preparation batch recording.
+- Service session tracking.
+- Waste event recording.
+- Surplus listing and redistribution.
+- Claim management and approval workflows.
+
+### 2. Multi-Role Application
+
+| Role | Capabilities |
+|---|---|
+| Zone Administrator | Zone-wide monitoring, analytics, establishments, recipients and system administration |
+| Auditor | Read-only access to operational information and audit records |
+| Establishment Manager | Procurement, inventory, preparation, waste, surplus and staff management |
+| Establishment Staff | Day-to-day operational record management |
+| Recipient Agent | Surplus discovery, matching and claim management |
+
+### 3. Analytics Dashboard
+
+- Waste trend analysis.
+- Weekday waste profiles.
+- Zone comparisons.
+- Diversion rate analysis.
+- Establishment peer rankings.
+- Surplus rescue funnel.
+- Supplier spoilage analysis.
+- Data provenance and anomaly identification.
+
+### 4. Surplus Redistribution
+
+- Surplus food listing.
+- Recipient suitability ranking.
+- Semantic food matching.
+- Claim submission and approval.
+- Claim lifecycle management.
+- Inventory deduction and transaction integrity.
+
+### 5. Advanced Database Demonstrations
+
+A dedicated DBMS Lab provides access to:
+
+- SQL query catalogue.
+- EXPLAIN ANALYZE.
+- Constraint demonstrations.
+- Database object exploration.
+- Materialised view refresh.
+- Transaction and rollback demonstrations.
+
+### 6. Waste Forecasting
+
+Three forecasting approaches are compared:
+
+- Seasonal Naive
+- Ridge Regression
+- LightGBM
+
+The forecasting dashboard provides:
+
+- Actual versus predicted waste.
+- Model performance comparison.
+- Feature importance.
+- Expected next-day waste by establishment.
+- Zone-level forecasts.
+
+---
+
+## System Architecture
+
+ZoneFood uses a multi-database architecture.
+
+```text
+                   USERS
+                     |
+                     v
+             NEXT.JS APPLICATION
+             React 19 + TypeScript
+                     |
+          +----------+----------+
+          |                     |
+          v                     v
+    APPLICATION APIs       AUTHENTICATION
+          |
+    +-----+-------------------+
+    |                         |
+    v                         v
+POSTGRESQL 16              MONGODB 7
++ pgvector                 Flexible Documents
+    |                         |
+    |                         |
+    v                         v
+Core Transactions        Field Submissions
+Food Lifecycle           Inspection Reports
+Inventory                Sensor Readings
+Waste Events             Establishment Metadata
+Surplus & Claims         Activity Records
+    |
+    v
+DATABASE ANALYTICS
+SQL Queries / Views / Triggers
+    |
+    v
+FORECASTING PIPELINE
+Seasonal Naive / Ridge / LightGBM
+    |
+    v
+ANALYTICS & FORECAST DASHBOARDS
 ```
 
-Everything below uses the venv interpreter; on Linux/macOS replace `.\.venv\Scripts\python` with `.venv/bin/python`.
+### Why Three Database Technologies?
 
-### Day-to-day commands
+| Technology | Purpose |
+|---|---|
+| PostgreSQL 16 | Primary transactional database and system of record |
+| MongoDB 7 | Flexible operational documents and heterogeneous submissions |
+| pgvector | Vector similarity search and semantic matching within PostgreSQL |
+
+**PostgreSQL** maintains structured relationships, transactional consistency, constraints and business rules.
+
+**MongoDB** handles differently shaped submissions without forcing every establishment into an excessively wide relational structure.
+
+**pgvector** enables semantic similarity search using 384-dimensional embeddings and HNSW indexes.
+
+---
+
+## Technology Stack
+
+| Category | Technologies |
+|---|---|
+| Frontend | Next.js 16, React 19, TypeScript |
+| Styling | Tailwind CSS 4 |
+| Visualisation | Recharts |
+| Animations | Motion, GSAP |
+| Backend | Next.js App Router and API routes |
+| Relational Database | PostgreSQL 16 |
+| Document Database | MongoDB 7 |
+| Vector Search | pgvector |
+| Database Access | PostgreSQL `pg` driver, MongoDB official driver |
+| Validation | Zod |
+| Authentication | bcrypt, signed HTTP-only session cookies |
+| Machine Learning | Python, Ridge Regression, LightGBM |
+| Embeddings | MiniLM-L6-v2, ONNX Runtime |
+| Infrastructure | Docker Compose |
+| Testing | pytest, Vitest, integration tests |
+
+---
+
+## Database Design
+
+### PostgreSQL
+
+PostgreSQL acts as the central system of record.
+
+The relational schema covers:
+
+- Geographical hierarchy.
+- Establishments and organisations.
+- Food items and dishes.
+- Suppliers and procurement.
+- Inventory lots.
+- Preparation batches.
+- Service sessions.
+- Waste events.
+- Surplus listings.
+- Recipient claims.
+- Audit records.
+- Forecasting information.
+
+### MongoDB
+
+MongoDB stores flexible operational records:
+
+| Collection / Data Area | Purpose |
+|---|---|
+| Waste Submissions | Different formats of waste reporting |
+| Inspection Reports | Operational inspection records |
+| Bin Sensor Readings | Time-series sensor information |
+| Establishment Metadata | Flexible establishment-specific information |
+| Activity Stream | Operational activity records |
+
+### Vector Search
+
+pgvector is used for:
+
+- Food-name normalisation.
+- Semantic food matching.
+- Surplus-to-recipient similarity matching.
+
+The embedding pipeline uses MiniLM-L6-v2 locally through ONNX Runtime.
+
+---
+
+## Application Modules
+
+| Module | Description |
+|---|---|
+| Dashboard | Zone-wide operational KPIs and analytics |
+| Establishments | Establishment management and comparisons |
+| Recipients | Recipient organisation management |
+| Zones | Geographical hierarchy and roll-up analysis |
+| Procurement | Supplier and purchase records |
+| Inventory | Stock and expiry management |
+| Service Sessions | Preparation and service tracking |
+| Waste Management | Waste recording and analysis |
+| Surplus Management | Surplus creation and recipient matching |
+| Claims | Claim approval and lifecycle management |
+| Field Logs | Flexible field submissions |
+| Inspections | Inspection report management |
+| Food Catalogue | Food and dish catalogue |
+| Matching | Semantic food matching |
+| Data Sync | Embedding and demonstration data preparation |
+| Analytics | Waste trends, comparisons and diversion metrics |
+| Forecast | Waste forecasting and model comparisons |
+| DBMS Lab | SQL queries and advanced database demonstrations |
+| Audit Log | User-attributed audit information |
+| System Status | Database and application status |
+
+The interface provides role-specific dashboards and workflows. Data displayed by the application is retrieved from the connected databases.
+
+---
+
+## Advanced DBMS Implementation
+
+ZoneFood demonstrates practical DBMS concepts beyond basic CRUD operations.
+
+### SQL Query Catalogue
+
+**26 SQL queries (Q01–Q26)** demonstrate:
+
+- Joins.
+- GROUP BY and HAVING.
+- Nested subqueries.
+- Correlated subqueries.
+- Window functions.
+- Recursive CTEs.
+- DML operations.
+
+Location: `db/queries/`
+
+Documentation: `docs/QUERY_CATALOGUE.md`
+
+### Stored Functions and Procedures
+
+Examples include:
+
+- `fn_claim_surplus`
+- `fn_transition_claim`
+- `sp_close_service_session`
+
+Implemented through the database migrations.
+
+### Triggers
+
+The implementation includes trigger groups T1–T6 covering:
+
+| Trigger Area | Responsibility |
+|---|---|
+| Consumption Balance | Quantity consistency |
+| Cost and CO2e Provenance | Cost and emissions attribution |
+| Inventory Ledger | Controlled stock deduction |
+| Audit | User-attributed activity tracking |
+| Claim State Machine | Valid claim transitions |
+| Listing Guard | Surplus listing validation |
+
+### Views and Materialised Views
+
+- Reusable analytical views.
+- Materialised views for precomputed analytical results.
+- Administrative refresh functionality.
+
+### Indexing and Partitioning
+
+- B-tree and specialised indexes.
+- Full-text and trigram search.
+- HNSW vector indexes.
+- Partitioned event data.
+- EXPLAIN ANALYZE evidence.
+
+### Transactions and Concurrency
+
+- ACID transaction demonstrations.
+- Savepoints.
+- Rollback.
+- Concurrent operation tests.
+- Race-condition handling.
+
+### DDL Operations
+
+Demonstrations include:
+
+- ALTER operations.
+- DROP operations.
+- Controlled schema lifecycle management.
+
+### Audit Logging
+
+Relevant database changes are attributed to the authenticated application user.
+
+More details:
+
+- `docs/ADVANCED_DBMS.md`
+- `docs/DB_OBJECTS.md`
+- `docs/EXPLAIN_EVIDENCE.md`
+- `docs/CONCURRENCY_EVIDENCE.md`
+
+---
+
+## Waste Forecasting
+
+ZoneFood includes an implemented forecasting pipeline using historical synthetic waste records.
+
+### Models Compared
+
+| Model | Description |
+|---|---|
+| Seasonal Naive | Historical seasonal baseline |
+| Ridge Regression | Regularised linear regression |
+| LightGBM | Gradient-boosted decision trees |
+
+### Forecasting Methodology
+
+The pipeline uses:
+
+- Chronological train, validation and test splits.
+- Leakage-aware feature engineering.
+- Historical and calendar-based features.
+- A 28-day test evaluation window.
+- Establishment-level and zone-level evaluation.
+
+Random shuffling is avoided to preserve the time sequence of observations.
+
+### Evaluation Metrics
+
+| Metric | Purpose |
+|---|---|
+| MAE | Mean Absolute Error |
+| RMSE | Root Mean Squared Error |
+| WAPE | Weighted Absolute Percentage Error |
+
+### Forecasting Workflow
+
+```text
+Historical Waste Records
+          |
+          v
+    Data Preparation
+          |
+          v
+   Feature Engineering
+          |
+          v
+ Chronological Splitting
+          |
+     +----+----+
+     |    |    |
+     v    v    v
+ Seasonal Ridge LightGBM
+ Naive
+     |    |    |
+     +----+----+
+          |
+          v
+   Model Evaluation
+          |
+          v
+ PostgreSQL Storage
+          |
+          v
+    Forecast Dashboard
+```
+
+### Execution
+
+```bash
+python scripts/forecast.py
+```
+
+The script trains and evaluates the models and stores the results in PostgreSQL.
+
+Documentation: `docs/FORECASTING.md`
+
+> Forecasting results are based on synthetic historical data. They demonstrate the implemented modelling and evaluation pipeline and should not be interpreted as real-world predictive guarantees.
+
+---
+
+## Project Structure
+
+```text
+ZONE-FOOD/
+│
+├── db/
+│   ├── migrations/
+│   │   ├── 001_*.sql
+│   │   ├── ...
+│   │   └── 019_*.sql
+│   │
+│   ├── queries/
+│   │   ├── Q01_*.sql
+│   │   ├── ...
+│   │   └── Q26_*.sql
+│   │
+│   └── demos/
+│
+├── src/
+│   ├── app/
+│   │   ├── API routes
+│   │   └── Application pages
+│   │
+│   ├── components/
+│   │
+│   └── lib/
+│       ├── auth/
+│       ├── db/
+│       ├── domain/
+│       ├── embeddings/
+│       ├── env/
+│       ├── http/
+│       ├── log/
+│       └── validation/
+│
+├── scripts/
+│   ├── migrate.py
+│   ├── mongo_init.py
+│   ├── seed.py
+│   ├── seed_catalog.py
+│   ├── verify_db.py
+│   ├── setup_db.py
+│   ├── forecast.py
+│   ├── gen_docs.py
+│   ├── gen_part3_docs.py
+│   └── run_all_tests.py
+│
+├── scripts-web/
+│   └── prepare-demo.ts
+│
+├── tests/
+│   └── Database and migration tests
+│
+├── tests-web/
+│   └── Web unit and integration tests
+│
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── DATA_MODEL.md
+│   ├── MONGODB_DESIGN.md
+│   ├── ER_DIAGRAM.md
+│   ├── DATA_DICTIONARY.md
+│   ├── QUERY_CATALOGUE.md
+│   ├── ADVANCED_DBMS.md
+│   ├── DB_OBJECTS.md
+│   ├── EXPLAIN_EVIDENCE.md
+│   ├── CONCURRENCY_EVIDENCE.md
+│   ├── FORECASTING.md
+│   ├── TEST_REPORT.md
+│   ├── REQUIREMENTS_AUDIT.md
+│   ├── REQUIREMENTS_TRACEABILITY.md
+│   ├── PROJECT_REPORT.md
+│   ├── DEMO_SCRIPT.md
+│   ├── VIVA_QA.md
+│   └── screenshots/
+│
+├── docker-compose.yml
+├── requirements.txt
+├── package.json
+├── .env.example
+├── .gitignore
+├── README.md
+├── IMPLEMENTATION.md
+├── CURRENT_STATUS.md
+└── FRIEND_SETUP_GUIDE.md
+```
+
+---
+
+## Getting Started
+
+Follow these instructions to run ZoneFood locally.
+
+### Prerequisites
+
+Install the following:
+
+| Requirement | Version |
+|---|---|
+| Docker Desktop | Latest stable |
+| Python | 3.11+ |
+| Node.js | 20.9+ |
+| npm | Included with Node.js |
+| Git | Latest stable |
+
+Make sure Docker Desktop is running before starting the database services.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/raviteja2028tech/ZONE-FOOD.git
+
+cd ZONE-FOOD
+```
+
+### 2. Configure Environment Variables
+
+Create your local environment file.
+
+**Windows PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**Linux / macOS:**
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and configure the required credentials and environment variables.
+
+Never commit your real `.env` file.
+
+### 3. Create Python Virtual Environment
+
+```bash
+python -m venv .venv
+```
+
+**Windows PowerShell:**
+
+```powershell
+.\.venv\Scripts\python -m pip install -r requirements.txt
+```
+
+**Linux / macOS:**
+
+```bash
+.venv/bin/python -m pip install -r requirements.txt
+```
+
+### 4. Start Database Services
+
+```bash
+docker compose up -d --wait
+```
+
+This starts:
+
+- PostgreSQL 16 with pgvector.
+- MongoDB 7.
+
+The services use Docker volumes to preserve database data between normal restarts.
+
+### 5. Initialise the Databases
+
+**Windows PowerShell:**
+
+```powershell
+.\.venv\Scripts\python scripts/setup_db.py
+```
+
+**Linux / macOS:**
+
+```bash
+.venv/bin/python scripts/setup_db.py
+```
+
+This prepares the database schema, applies migrations and loads the synthetic demonstration dataset.
+
+To completely reset and rebuild the database:
+
+```bash
+python scripts/setup_db.py --reset
+```
+
+> Warning: `--reset` destroys and recreates the project database contents. Use it only when a fresh rebuild is intended.
+
+### 6. Install Node Dependencies
+
+```bash
+npm install
+```
+
+### 7. Prepare Demonstration Data
+
+```bash
+npm run demo:prepare
+```
+
+This prepares local embeddings and demonstration surplus listings. The first run downloads the required embedding model into the local cache.
+
+### 8. Generate Forecasting Results
+
+```bash
+python scripts/forecast.py
+```
+
+This trains and evaluates the forecasting models and stores the generated results in PostgreSQL.
+
+### 9. Start the Application
+
+```bash
+npm run dev
+```
+
+Open:
+
+**http://localhost:3000**
+
+ZoneFood is now running locally.
+
+---
+
+## Environment Configuration
+
+The repository includes `.env.example` as the configuration template.
+
+The actual `.env` file is local-only and must not be committed.
+
+Configure the database connection details, application settings, authentication/session secrets and demonstration password according to the variables documented in `.env.example`.
+
+Important configuration considerations:
+
+- Use strong local passwords.
+- Keep secrets out of source control.
+- Use the same database credentials across the relevant application and setup scripts.
+- Configure `DEMO_USER_PASSWORD` for seeded demonstration accounts.
+- Keep database ports consistent with Docker Compose configuration.
+
+Default host ports:
+
+| Service | Host Port |
+|---|---:|
+| PostgreSQL | 5433 |
+| MongoDB | 27018 |
+| Next.js | 3000 |
+
+Database host connections use `127.0.0.1` to avoid IPv6 localhost resolution delays on certain Windows configurations.
+
+---
+
+## Running the Application
+
+### Development
+
+```bash
+npm run dev
+```
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+### Type Checking
+
+```bash
+npm run typecheck
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+### Database Management
 
 | Task | Command |
 |---|---|
 | Start databases | `docker compose up -d --wait` |
-| Stop (data kept) | `docker compose down` |
-| Status / health | `docker compose ps` |
-| Logs | `docker compose logs -f postgres` (or `mongo`) |
-| PostgreSQL shell | `docker exec -it zonefood-postgres psql -U zonefood -d zonefood` |
-| MongoDB shell | `docker exec -it zonefood-mongo mongosh -u zonefood -p <MONGO password> --authenticationDatabase admin zonefood` |
-| Apply pending migrations | `python scripts/migrate.py up` · list: `python scripts/migrate.py status` |
-| **Full reset + reseed** | `python scripts/setup_db.py --reset` |
-| Seed only (re-runnable) | `python scripts/seed.py` (`--end-date 2026-10-30 --rng-seed 42` for a reproducible dataset) |
-| Verify integrity | `python scripts/verify_db.py` |
-| Regenerate ER diagram + data dictionary | `python scripts/gen_docs.py` (`--check` to prove they match the live schema) |
-| Run the test-suite | `python -m pytest -v` |
-| **Destroy all data incl. volumes** | `docker compose down -v` |
+| Stop databases | `docker compose down` |
+| Check containers | `docker compose ps` |
+| View PostgreSQL logs | `docker compose logs -f postgres` |
+| View MongoDB logs | `docker compose logs -f mongo` |
+| Apply migrations | `python scripts/migrate.py up` |
+| Check migration status | `python scripts/migrate.py status` |
+| Verify database | `python scripts/verify_db.py` |
+| Reseed data | `python scripts/seed.py` |
+| Regenerate database documentation | `python scripts/gen_docs.py` |
 
-Host ports default to **5433** (PostgreSQL) and **27018** (MongoDB) so they do not collide with a local
-install; change them in `.env`. Hosts are `127.0.0.1` rather than `localhost` — on some Windows setups
-`localhost` resolves to IPv6 first and every connection stalls ~8 s before falling back.
+Normal shutdown preserves data:
 
-## Web application (Part 2)
-
-Next.js 16 (App Router, Turbopack) + React 19 + TypeScript + Tailwind CSS 4 + Recharts, with `motion` for page/card/navigation animation and `gsap` for the sign-in sequence only (all animation respects reduced-motion). Node >= 20.9 (tested on Node 24).
-PostgreSQL via raw parameterised SQL (`pg`); MongoDB via the official driver; no ORM. Local embeddings (MiniLM-L6-v2 through ONNX Runtime) - no API key.
-
-```powershell
-docker compose up -d --wait         # PostgreSQL 16 + pgvector, MongoDB 7
-python scripts/setup_db.py          # migrations 001-019 + seed (add --reset for a clean rebuild)
-npm install
-python scripts/forecast.py          # train + store the forecasting models (Forecast page)
-npm run demo:prepare                # embeddings + live synthetic listings (first run downloads a ~23 MB model into .cache/)
-npm run dev                         # http://localhost:3000
-npm run build ; npm start           # production
+```bash
+docker compose down
 ```
 
-| Task | Command |
+To delete all database volumes and stored database data:
+
+```bash
+docker compose down -v
+```
+
+**Use the volume deletion command carefully.**
+
+---
+
+## Demo Accounts
+
+ZoneFood creates synthetic demonstration users through its database seed process.
+
+All seeded accounts share the password configured through:
+
+```env
+DEMO_USER_PASSWORD=your_local_demo_password
+```
+
+Example account roles:
+
+| Role | Example Email |
 |---|---|
-| Type-check / lint | `npm run typecheck` / `npm run lint` |
-| Unit tests (no DB) | `npm test` |
-| Integration tests (builds and drops its own `zonefood_webtest` DB + Mongo DB) | `npm run test:integration` |
-| Fill NULL embeddings / publish live demo listings | `npm run demo:prepare` (or the Data sync page, admin) |
+| Zone Administrator | `admin@zonefood.example` |
+| Auditor | `auditor@zonefood.example` |
+| Establishment Manager | `manager.greenfield.academy.canteen@zonefood.example` |
+| Establishment Staff | `staff.greenfield.academy.canteen@zonefood.example` |
+| Recipient Agent | `agent.annapoorna.community.kitchen@zonefood.example` |
 
-**Screens by role** - *Zone admin / auditor:* dashboard with KPIs, waste-trend and zone-comparison charts, establishments, recipients, zones roll-up, waste, surplus, claims, field logs, inspections, food catalogue, name matching, data sync, system status (auditor is read-only). *Establishment manager / staff:* own dashboard with expiry alerts, procurement, inventory, service sessions, waste, surplus listings with ranked recipients, claims (managers approve), field logs, inspections. *Recipient:* dashboard, ranked feed of feasible surplus, claims, organisation profile.
-Every number on a screen is computed live from the databases. Missing `.env` values give a clear setup error naming the variable.
+The seeded dataset contains multiple users across the supported roles.
 
-**Security summary:** bcrypt (cost 12) hashes only; signed httpOnly SameSite=Lax session cookie carrying only the user id; role and active status re-read from the database on every request; permission check on every API route and page (`src/lib/auth/permissions.ts`); tenant scoping in SQL; zod validation -> CHECK constraints -> triggers; login lockout; same-origin check on mutations; secrets only in `.env`.
+To inspect the available users:
 
-## Demo accounts (synthetic, local only)
+```sql
+SELECT email, role
+FROM app_user
+ORDER BY user_id;
+```
 
-`scripts/seed.py` creates 80 users. All share the password you set as `DEMO_USER_PASSWORD` in `.env`
-(stored only as bcrypt hashes in the database).
+These are local synthetic demonstration accounts, not production credentials.
 
-| Role | Example email |
-|---|---|
-| Zone administrator | `admin@zonefood.example` |
-| Auditor (read-only role) | `auditor@zonefood.example` |
-| Establishment manager / staff | `manager.<name>@zonefood.example`, `staff.<name>@zonefood.example` — e.g. `manager.greenfield.academy.canteen@zonefood.example` |
-| Recipient agent | `agent.<org>@zonefood.example` — e.g. `agent.annapoorna.community.kitchen@zonefood.example` |
-
-Find any email with `SELECT email, role FROM app_user ORDER BY user_id;`. Sign in on the login page; the shared password is `DEMO_USER_PASSWORD` from your `.env`.
-
-## What the seeded dataset contains
-
-~150 days of history ending yesterday: 1 sector → 6 blocks → 24 streets; 32 food-service establishments
-+ 24 residential units; 81 food items and 264 dishes; ~9.5k service sessions, ~22k preparation batches,
-~7.9k procurements → ~19.9k inventory lots; ~54.6k waste events; ~4.4k surplus listings with ~3.9k claims;
-and in MongoDB ~650 differently shaped waste submissions, inspection reports, a bin-sensor time series,
-establishment metadata and an activity stream. It includes planted, discoverable patterns (a chronic
-over-preparing school, a supplier whose produce spoils ~3× more, monsoon spoilage, weekly and event
-seasonality, anomalous days) — see the header of `scripts/seed.py`.
-
-## Advanced DBMS features (Part 3)
-
-All of this runs on the real database and is demonstrable from the **DBMS Lab** page (zone admin / auditor). Details, with what / why / where / how-to-demo for each, are in [docs/ADVANCED_DBMS.md](docs/ADVANCED_DBMS.md).
-
-| Feature | Where |
-|---|---|
-| 26-query SQL catalogue (joins, GROUP BY/HAVING, nested + correlated subqueries, window functions, recursive CTEs, DML) | `db/queries/`, [docs/QUERY_CATALOGUE.md](docs/QUERY_CATALOGUE.md) |
-| Stored functions + procedure (`fn_claim_surplus`, `fn_transition_claim`, `sp_close_service_session`, …) | migration 016 |
-| Triggers T1-T6 (consumption balance, cost/CO2e + provenance, **inventory ledger: stock deducted exactly once**, audit, claim state machine, listing guard) | migrations 009, 014, 017 |
-| Views + materialised view | migration 015 |
-| Indexes, partitioning, EXPLAIN ANALYZE evidence | migrations 006, 008, 018, [docs/EXPLAIN_EVIDENCE.md](docs/EXPLAIN_EVIDENCE.md) |
-| Transactions, savepoints, rollback, real concurrency tests | [docs/CONCURRENCY_EVIDENCE.md](docs/CONCURRENCY_EVIDENCE.md), `db/demos/` |
-| Full-text + trigram search, pgvector semantic matching | `fn_search_food`, `/matching`, `/feed` |
-| ALTER / DROP DDL | migration 014, `db/demos/01_ddl_lifecycle.sql` |
-| Audit trail attributed to the real user | trigger T4, `/audit` |
-
-New screens: **Analytics** (`/analytics`: anomaly-marked trend, weekday profile, diversion rate, peer ranking, rescue funnel, supplier spoilage, data provenance - each chart has a table view), **DBMS Lab** (`/lab`: run any catalogue query, EXPLAIN ANALYZE it, run 12 live constraint demonstrations that are rolled back, browse every database object, refresh the materialised view), **Audit log** (`/audit`), and a command palette (Ctrl+K).
-
-## Waste forecasting
-
-`python scripts/forecast.py` trains three models on the recorded history (seasonal naive baseline, Ridge regression, LightGBM) with a chronological train / validation / test split and leak-free features, scores them (MAE, RMSE, WAPE at kitchen and zone level), stores the run in PostgreSQL (migration 019) and the **Forecast** page shows actual-vs-predicted, the model comparison, feature importance and tomorrow's expected waste per establishment. Method, results and limitations (synthetic data, 28-day test window): [docs/FORECASTING.md](docs/FORECASTING.md).
+---
 
 ## Testing
 
-```powershell
-python scripts/run_all_tests.py      # everything (about 5 minutes) -> writes docs/TEST_REPORT.md from the real results
+ZoneFood includes database tests, web unit tests and application integration tests.
+
+### 1. Database Test Suite
+
+```bash
+python -m pytest -v
+```
+
+Covers:
+
+- Database migrations.
+- Constraints and triggers.
+- SQL query catalogue.
+- Database relationships.
+- Transaction behaviour.
+- Concurrency.
+
+### 2. Web Unit Tests
+
+```bash
+npm test
+```
+
+### 3. Web Integration Tests
+
+```bash
+npm run test:integration
+```
+
+Covers application APIs, role-based access, workflows, ETL and concurrency using disposable test databases.
+
+### 4. Complete Test Workflow
+
+```bash
+python scripts/run_all_tests.py
+```
+
+To skip the build step:
+
+```bash
 python scripts/run_all_tests.py --skip-build
-python -m pytest -q                  # database layer: migrations, constraints, triggers, catalogue, concurrency
-npm test                             # unit tests
-npm run test:integration             # API, RBAC, workflows, ETL, concurrency (disposable zonefood_webtest database)
 ```
 
-Results: [docs/TEST_REPORT.md](docs/TEST_REPORT.md). The working database is never touched by the suites.
+The complete test workflow generates:
 
-## Documentation index
+```text
+docs/TEST_REPORT.md
+```
 
-| Document | Content |
+The test suites are designed to use separate test databases and must not modify the working demonstration database.
+
+---
+
+## Security
+
+Security measures implemented in ZoneFood include:
+
+- bcrypt password hashing with cost factor 12.
+- Signed HTTP-only session cookies.
+- SameSite=Lax session configuration.
+- Database-backed role and active-status checks.
+- Role-based permission checks on application pages and API routes.
+- Tenant-scoped SQL operations.
+- Zod input validation.
+- Database constraints and triggers.
+- Login lockout controls.
+- Same-origin mutation checks.
+- Environment-based secret management.
+
+The auditor role is read-only.
+
+---
+
+## Documentation
+
+The `docs/` directory contains the technical documentation and academic project materials.
+
+| Document | Description |
 |---|---|
-| [IMPLEMENTATION.md](IMPLEMENTATION.md) | everything that is implemented, with evidence |
-| [FRIEND_SETUP_GUIDE.md](FRIEND_SETUP_GUIDE.md) | exact clone-to-run instructions |
-| [docs/FORECASTING.md](docs/FORECASTING.md) | forecasting method, leakage prevention, results, limitations |
-| [docs/PROJECT_REPORT.md](docs/PROJECT_REPORT.md) | overview of the whole submission |
-| [docs/ER_DIAGRAM.md](docs/ER_DIAGRAM.md) · [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md) | generated from the live catalog |
-| [docs/DATA_MODEL.md](docs/DATA_MODEL.md) · [docs/MONGODB_DESIGN.md](docs/MONGODB_DESIGN.md) | PostgreSQL and MongoDB design, normalisation |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | components and data flows |
-| [docs/QUERY_CATALOGUE.md](docs/QUERY_CATALOGUE.md) | 26 queries with SQL, concept, purpose, real results |
-| [docs/ADVANCED_DBMS.md](docs/ADVANCED_DBMS.md) · [docs/DB_OBJECTS.md](docs/DB_OBJECTS.md) | procedures, triggers, views, indexes, partitioning, search, vectors, DDL |
-| [docs/EXPLAIN_EVIDENCE.md](docs/EXPLAIN_EVIDENCE.md) · [docs/CONCURRENCY_EVIDENCE.md](docs/CONCURRENCY_EVIDENCE.md) | measured plans; race-condition evidence |
-| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | unit and system/integration test results |
-| [docs/REQUIREMENTS_AUDIT.md](docs/REQUIREMENTS_AUDIT.md) | independent Req. 1-18 audit, data-volume assessment, open items |
-| [docs/REQUIREMENTS_TRACEABILITY.md](docs/REQUIREMENTS_TRACEABILITY.md) | Req. 1-18, query map, deviations |
-| [docs/TEAM_AND_CONTRIBUTIONS.md](docs/TEAM_AND_CONTRIBUTIONS.md) | team members and responsibilities (to be completed by the team) |
-| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) · [docs/VIVA_QA.md](docs/VIVA_QA.md) | 12-minute demo; viva questions with answers |
-| [docs/DECISIONS.md](docs/DECISIONS.md) · [docs/UI_DESIGN_DIRECTION.md](docs/UI_DESIGN_DIRECTION.md) | design decisions; UI direction |
-| [docs/screenshots/](docs/screenshots/) | screenshots of the running application |
+| `IMPLEMENTATION.md` | Complete implementation overview |
+| `ARCHITECTURE.md` | System architecture and data flow |
+| `DATA_MODEL.md` | Relational database design |
+| `MONGODB_DESIGN.md` | MongoDB collection design |
+| `ER_DIAGRAM.md` | Entity Relationship Diagram |
+| `DATA_DICTIONARY.md` | Database table and attribute reference |
+| `QUERY_CATALOGUE.md` | SQL query catalogue |
+| `ADVANCED_DBMS.md` | Advanced DBMS implementation |
+| `DB_OBJECTS.md` | Database objects |
+| `EXPLAIN_EVIDENCE.md` | Query execution plan evidence |
+| `CONCURRENCY_EVIDENCE.md` | Transaction and concurrency demonstrations |
+| `FORECASTING.md` | Forecasting methodology and evaluation |
+| `TEST_REPORT.md` | Automated testing results |
+| `REQUIREMENTS_AUDIT.md` | Requirements audit |
+| `REQUIREMENTS_TRACEABILITY.md` | Requirement-to-implementation mapping |
+| `PROJECT_REPORT.md` | Academic project report |
+| `DEMO_SCRIPT.md` | Application demonstration guide |
+| `VIVA_QA.md` | DBMS viva preparation |
 
-Regenerate the generated documents from the live databases: `python scripts/gen_docs.py` (ER, dictionary) and `python scripts/gen_part3_docs.py` (catalogue, EXPLAIN, concurrency, objects, MongoDB).
+Additional setup documentation:
 
-## Version control
+- `FRIEND_SETUP_GUIDE.md` – Fresh clone and execution instructions.
+- `CURRENT_STATUS.md` – Project progress and verification record.
+- `ZoneFood_WORKFLOW.md` – Project development workflow.
 
-Git is initialised **inside this project folder** (not in any parent directory). Nothing has been pushed. To publish when you decide to: `git remote add origin <url>` then `git push -u origin main`. `.env`, `node_modules`, `.venv`, database volumes and the model cache are git-ignored; `.gitattributes` keeps SQL files LF so migration checksums match on every machine.
+---
 
-## Repository layout
+## Dataset
 
-```
-docker-compose.yml        PostgreSQL 16 + pgvector, MongoDB 7 (volumes, health checks)
-.env.example              configuration template (copy to .env; .env is git-ignored)
-db/migrations/            numbered, checksummed SQL migrations 001-019  (the schema's source of truth)
-db/queries/               Q01-Q26 catalogue queries (one file each: title, concepts, purpose, SQL)
-db/demos/                 safe DDL / transaction / race demonstrations (always rolled back)
-src/                      Next.js app: app/ (pages + 41 API routes), components/, lib/{auth,db,domain,embeddings,env,http,log,validation}, proxy.ts
-tests-web/                vitest unit + integration tests for the web app
-scripts-web/              prepare-demo.ts (embeddings + live demo listings)
-scripts/                  migrate.py, mongo_init.py, seed.py (+seed_catalog.py), verify_db.py, setup_db.py, catalogue.py,
-                          gen_docs.py, gen_part3_docs.py, run_all_tests.py
-tests/                    pytest suite (throw-away databases; never touches your working data)
-docs/                     the submission documents listed above
-CURRENT_STATUS.md         single source of truth for progress
-ZoneFood_Master_Plan.pdf  project specification        ZoneFood_WORKFLOW.md  build workflow
-```
+The project uses a synthetic locality-scale dataset containing approximately 150 days of historical records.
 
-## Scope
+### Dataset Overview
 
-| Part | Content | State |
-|---|---|---|
-| 1 | Database foundation: environment, schema, migrations, seed data | Done & verified (approved) |
-| 2 | Next.js application, auth/roles, lifecycle workflows, MongoDB integration + ETL, embeddings | Done & verified (approved) |
-| 3 | Query catalogue, advanced DBMS features, dashboard UI, testing, submission package | Done & verified (approved) |
-| 5 | Final audit, premium UI layer, Git set-up, fresh-clone verification | **Done; open items (team details, GitHub remote) listed in CURRENT_STATUS.md** |
-| 4 | Forecasting (requested explicitly) | Done: Seasonal naive vs Ridge vs LightGBM, stored runs, `/forecast` dashboard. Further research extensions: not started |
+| Category | Approximate Volume |
+|---|---:|
+| Geographical structure | 1 sector, 6 blocks, 24 streets |
+| Establishments | 32 |
+| Residential units | 24 |
+| Food items | 81 |
+| Dishes | 264 |
+| Service sessions | 9,500 |
+| Preparation batches | 22,000 |
+| Procurement records | 7,900 |
+| Inventory lots | 19,900 |
+| Waste events | 54,600 |
+| Surplus listings | 4,400 |
+| Surplus claims | 3,900 |
+| MongoDB documents | 650+ |
+
+The dataset includes intentionally planted demonstration patterns such as:
+
+- Chronic over-preparation.
+- Supplier-related spoilage.
+- Seasonal and weekday variation.
+- Monsoon-related spoilage patterns.
+- Unusual waste events.
+- Surplus redistribution activity.
+
+These patterns help demonstrate database queries, analytical dashboards and forecasting workflows.
+
+All quantities are approximate and refer to the synthetic seeded dataset.
+
+---
+
+## Team
+
+**Developed by:**
+
+| Name | SRN |
+|---|---|
+| A RAVITEJA | PES1UG24AM001 |
+| ARYA DEYANG | PES1UG24AM054 |
+
+**Department:** Artificial Intelligence and Machine Learning (AIML)  
+**Institution:** PES University
+
+**Course:** Database Management Systems (DBMS)
+
+---
+
+## Academic Context
+
+ZoneFood is developed as a DBMS mini-project for demonstrating the practical application of database management concepts.
+
+The project focuses on:
+
+- Relational database design and normalisation.
+- Multi-database integration.
+- SQL querying and optimisation.
+- Database constraints and integrity.
+- Stored procedures and triggers.
+- Views and materialised views.
+- Indexing and partitioning.
+- Transactions and concurrency.
+- Authentication and authorisation.
+- Analytical data processing.
+- Machine-learning-based waste forecasting.
+
+The objective is to demonstrate how database technologies can be integrated into a practical, data-driven application.
+
+---
+
+## License
+
+This repository is maintained as an academic project.
+
+Unless a separate license file is provided, all rights remain with the respective project authors. Please contact the authors before redistributing the project as a separate work.
+
+---
+
+<p align="center">
+  <strong>ZONEFOOD</strong><br/>
+  Turning food lifecycle data into actionable intelligence.
+</p>
